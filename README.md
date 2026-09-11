@@ -6,7 +6,7 @@ Sistema de chamados (tickets) para suporte ao cliente. Backend em **n8n** com pe
 
 Permitir cadastro de clientes, abertura e consulta de chamados, com histórico de interações — exposto via API HTTP para consumo por frontend e integrações.
 
-## Funcionalidades (Etapa 1 — implementadas)
+## Funcionalidades (Etapa 1 - implementadas)
 
 - Cadastrar cliente (`POST /clientes`)
 - Consultar cliente por ID (`GET /clientes/:id`)
