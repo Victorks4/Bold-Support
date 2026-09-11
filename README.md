@@ -121,6 +121,4 @@ Respostas de erro no formato `{ "erro": "...", "codigo": "..." }` com HTTP 400 (
 - Modo teste n8n (`/webhook-test`) exige **Listen for test event** por requisição.
 - Endpoint de produção (`/webhook`) depende de publicação na instância n8n.
 
-## Licença
 
-Não identificado no código.
