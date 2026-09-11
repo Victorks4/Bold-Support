@@ -1,0 +1,6 @@
+.env
+.env.local
+.cursor/
+node_modules/
+dist/
+*.log

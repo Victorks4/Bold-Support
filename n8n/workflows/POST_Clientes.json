@@ -1,0 +1,102 @@
+{
+  "name": "POST Clientes",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clientes",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-post-clientes",
+      "name": "Webhook_1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "bold-post-clientes"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nconst { nome, email, telefone } = body;\n\nif (!nome?.trim() || nome.length > 150) {\n  return [{ json: { valid: false, status: 400, erro: 'Nome inválido ou ausente', codigo: 'NOME_INVALIDO' } }];\n}\nif (!email?.trim() || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {\n  return [{ json: { valid: false, status: 400, erro: 'Email inválido', codigo: 'EMAIL_INVALIDO' } }];\n}\nif (!telefone?.trim()) {\n  return [{ json: { valid: false, status: 400, erro: 'Telefone obrigatório', codigo: 'TELEFONE_OBRIGATORIO' } }];\n}\n\nreturn [{ json: {\n  valid: true,\n  nome: nome.trim(),\n  email: email.trim().toLowerCase(),\n  telefone: telefone.trim()\n} }];"
+      },
+      "id": "code-validar-payload",
+      "name": "Validar_payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-payload-valido",
+      "name": "Payload_valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO clientes (nome, email, telefone) VALUES ($1, $2, $3) RETURNING id, nome, email, telefone, criado_em;",
+        "options": {
+          "queryReplacement": "={{ $json.nome }},{{ $json.email }},{{ $json.telefone }}"
+        }
+      },
+      "id": "postgres-inserir-cliente",
+      "name": "Inserir_cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [660, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseCode": 201 }
+      },
+      "id": "respond-201",
+      "name": "Responde_201",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-400",
+      "name": "Responde_400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 420]
+    }
+  ],
+  "connections": {
+    "Webhook_1": { "main": [[{ "node": "Validar_payload", "type": "main", "index": 0 }]] },
+    "Validar_payload": { "main": [[{ "node": "Payload_valido?", "type": "main", "index": 0 }]] },
+    "Payload_valido?": {
+      "main": [
+        [{ "node": "Inserir_cliente", "type": "main", "index": 0 }],
+        [{ "node": "Responde_400", "type": "main", "index": 0 }]
+      ]
+    },
+    "Inserir_cliente": { "main": [[{ "node": "Responde_201", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

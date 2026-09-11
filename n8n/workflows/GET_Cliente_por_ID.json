@@ -1,0 +1,148 @@
+{
+  "name": "GET_Cliente_por_ID",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "clientes/:id",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-get-cliente",
+      "name": "Webhook_1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "bold-get-cliente"
+    },
+    {
+      "parameters": {
+        "jsCode": "const params = $input.first().json.params ?? {};\nconst query = $input.first().json.query ?? {};\nconst id = params.id || query.id;\n\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\n\nif (!id || !uuidRegex.test(id)) {\n  return [{ json: { valid: false, status: 400, erro: 'ID inválido', codigo: 'ID_INVALIDO' } }];\n}\n\nreturn [{ json: { valid: true, id } }];"
+      },
+      "id": "code-extrair-id",
+      "name": "Extrair_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-id-valido",
+      "name": "Id_valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, nome, email, telefone, criado_em FROM clientes WHERE id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ $json.id }}"
+        }
+      },
+      "id": "postgres-buscar-cliente",
+      "name": "Buscar_cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [660, 200],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nif (!rows.length || !rows[0].id) {\n  return [{ json: { found: false, status: 404, erro: 'Cliente não encontrado', codigo: 'CLIENTE_NAO_ENCONTRADO' } }];\n}\nreturn [{ json: { found: true, ...rows[0] } }];"
+      },
+      "id": "code-cliente-existe",
+      "name": "Cliente_existe?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-encontrado",
+      "name": "Encontrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-200",
+      "name": "Responde_200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 404 }
+      },
+      "id": "respond-404",
+      "name": "Responde_404",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-400",
+      "name": "Responde_400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 420]
+    }
+  ],
+  "connections": {
+    "Webhook_1": { "main": [[{ "node": "Extrair_id", "type": "main", "index": 0 }]] },
+    "Extrair_id": { "main": [[{ "node": "Id_valido?", "type": "main", "index": 0 }]] },
+    "Id_valido?": {
+      "main": [
+        [{ "node": "Buscar_cliente", "type": "main", "index": 0 }],
+        [{ "node": "Responde_400", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar_cliente": { "main": [[{ "node": "Cliente_existe?", "type": "main", "index": 0 }]] },
+    "Cliente_existe?": { "main": [[{ "node": "Encontrado?", "type": "main", "index": 0 }]] },
+    "Encontrado?": {
+      "main": [
+        [{ "node": "Responde_200", "type": "main", "index": 0 }],
+        [{ "node": "Responde_404", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

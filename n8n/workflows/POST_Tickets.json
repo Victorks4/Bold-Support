@@ -1,0 +1,176 @@
+{
+  "name": "POST Tickets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tickets",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-post-tickets",
+      "name": "Webhook_1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "bold-post-tickets"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nconst { cliente_id, titulo, descricao, prioridade } = body;\nconst prioridades = ['baixa', 'media', 'alta'];\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\n\nif (!cliente_id || !uuidRegex.test(String(cliente_id))) {\n  return [{ json: { valid: false, status: 400, erro: 'cliente_id inválido', codigo: 'CLIENTE_ID_INVALIDO' } }];\n}\nconst tituloTexto = titulo == null ? '' : String(titulo).trim();\nif (!tituloTexto || tituloTexto.length > 200) {\n  return [{ json: { valid: false, status: 400, erro: 'Título inválido', codigo: 'TITULO_INVALIDO' } }];\n}\nconst descricaoTexto = descricao == null ? '' : String(descricao).trim();\nif (!descricaoTexto) {\n  return [{ json: { valid: false, status: 400, erro: 'Descrição obrigatória', codigo: 'DESCRICAO_OBRIGATORIA' } }];\n}\nconst prio = prioridade || 'media';\nif (!prioridades.includes(prio)) {\n  return [{ json: { valid: false, status: 400, erro: 'Prioridade inválida', codigo: 'PRIORIDADE_INVALIDA' } }];\n}\n\nconst now = new Date();\nconst date = now.toISOString().slice(0, 10).replace(/-/g, '');\nconst suffix = Math.random().toString(36).substring(2, 6).toUpperCase();\nconst protocolo = `TKT-${date}-${suffix}`;\n\nreturn [{ json: {\n  valid: true,\n  cliente_id,\n  titulo: tituloTexto,\n  descricao: descricaoTexto,\n  prioridade: prio,\n  protocolo,\n  status: 'aberto'\n} }];"
+      },
+      "id": "code-validar-protocolo",
+      "name": "Validar_gerar_protocolo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-payload-valido",
+      "name": "Payload_valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM clientes WHERE id = $1::uuid;",
+        "options": { "queryReplacement": "={{ $json.cliente_id }}" }
+      },
+      "id": "postgres-verificar-cliente",
+      "name": "Verificar_cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [660, 200],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cliente = $input.first().json;\nconst ticketData = $('Validar_gerar_protocolo').first().json;\nif (!cliente?.id) {\n  return [{ json: { found: false, status: 404, erro: 'Cliente não encontrado', codigo: 'CLIENTE_NAO_ENCONTRADO' } }];\n}\nreturn [{ json: { found: true, ...ticketData } }];"
+      },
+      "id": "code-cliente-existe",
+      "name": "Cliente_existe?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-cliente-ok",
+      "name": "Cliente_ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO tickets (protocolo, cliente_id, titulo, descricao, prioridade, status) VALUES ($1, $2::uuid, $3, $4, $5, $6) RETURNING *;",
+        "options": {
+          "queryReplacement": "={{ $json.protocolo }},{{ $json.cliente_id }},{{ $json.titulo }},{{ $json.descricao }},{{ $json.prioridade }},{{ $json.status }}"
+        }
+      },
+      "id": "postgres-inserir-ticket",
+      "name": "Inserir_ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1320, 100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO interacoes (ticket_id, tipo, mensagem) VALUES ($1::uuid, 'sistema', 'Ticket aberto automaticamente pelo sistema.');",
+        "options": {
+          "queryReplacement": "={{ $json.id }}"
+        }
+      },
+      "id": "postgres-interacao-sistema",
+      "name": "Interacao_sistema",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1540, 100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Inserir_ticket').first().json }}",
+        "options": { "responseCode": 201 }
+      },
+      "id": "respond-201",
+      "name": "Responde_201",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1760, 100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-400",
+      "name": "Responde_400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 420]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 404 }
+      },
+      "id": "respond-404",
+      "name": "Responde_404",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 320]
+    }
+  ],
+  "connections": {
+    "Webhook_1": { "main": [[{ "node": "Validar_gerar_protocolo", "type": "main", "index": 0 }]] },
+    "Validar_gerar_protocolo": { "main": [[{ "node": "Payload_valido?", "type": "main", "index": 0 }]] },
+    "Payload_valido?": {
+      "main": [
+        [{ "node": "Verificar_cliente", "type": "main", "index": 0 }],
+        [{ "node": "Responde_400", "type": "main", "index": 0 }]
+      ]
+    },
+    "Verificar_cliente": { "main": [[{ "node": "Cliente_existe?", "type": "main", "index": 0 }]] },
+    "Cliente_existe?": { "main": [[{ "node": "Cliente_ok?", "type": "main", "index": 0 }]] },
+    "Cliente_ok?": {
+      "main": [
+        [{ "node": "Inserir_ticket", "type": "main", "index": 0 }],
+        [{ "node": "Responde_404", "type": "main", "index": 0 }]
+      ]
+    },
+    "Inserir_ticket": { "main": [[{ "node": "Interacao_sistema", "type": "main", "index": 0 }]] },
+    "Interacao_sistema": { "main": [[{ "node": "Responde_201", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

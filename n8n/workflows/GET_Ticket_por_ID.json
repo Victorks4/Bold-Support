@@ -1,0 +1,175 @@
+{
+  "name": "GET Ticket por ID",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "tickets/:id",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-get-ticket-id",
+      "name": "Webhook_1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "bold-get-ticket-id"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst id = item.params?.id || item.query?.id;\n\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\n\nif (!id || !uuidRegex.test(id)) {\n  return [{ json: {\n    valid: false,\n    status: 400,\n    erro: 'ID do ticket inválido',\n    codigo: 'ID_INVALIDO'\n  } }];\n}\n\nreturn [{ json: { valid: true, id } }];"
+      },
+      "id": "code-extrair-id",
+      "name": "Extrair_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-id-valido",
+      "name": "Id_valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, protocolo, cliente_id, titulo, descricao, prioridade, status, criado_em, atualizado_em FROM tickets WHERE id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ $json.id }}"
+        }
+      },
+      "id": "postgres-buscar-ticket",
+      "name": "Buscar_ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [660, 200],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const ticket = $input.first().json;\n\nif (!ticket?.id) {\n  return [{ json: {\n    found: false,\n    status: 404,\n    erro: 'Ticket não encontrado',\n    codigo: 'TICKET_NAO_ENCONTRADO'\n  } }];\n}\n\nreturn [{ json: {\n  found: true,\n  ticket_id: ticket.id,\n  ticket\n} }];"
+      },
+      "id": "code-ticket-existe",
+      "name": "Ticket_existe?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-encontrado",
+      "name": "Encontrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, ticket_id, tipo, mensagem, criado_em FROM interacoes WHERE ticket_id = $1::uuid ORDER BY criado_em ASC;",
+        "options": {
+          "queryReplacement": "={{ $json.ticket_id }}"
+        }
+      },
+      "id": "postgres-buscar-interacoes",
+      "name": "Buscar_interacoes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1320, 100],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const interacoes = $input.all()\n  .map(item => item.json)\n  .filter(row => row.id);\n\nconst ticket = $('Ticket_existe?').first().json.ticket;\n\nreturn [{ json: {\n  ...ticket,\n  interacoes\n} }];"
+      },
+      "id": "code-montar-resposta",
+      "name": "Montar_resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-200",
+      "name": "Responde_200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1760, 100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 404 }
+      },
+      "id": "respond-404",
+      "name": "Responde_404",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 280]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-400",
+      "name": "Responde_400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 420]
+    }
+  ],
+  "connections": {
+    "Webhook_1": { "main": [[{ "node": "Extrair_id", "type": "main", "index": 0 }]] },
+    "Extrair_id": { "main": [[{ "node": "Id_valido?", "type": "main", "index": 0 }]] },
+    "Id_valido?": {
+      "main": [
+        [{ "node": "Buscar_ticket", "type": "main", "index": 0 }],
+        [{ "node": "Responde_400", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar_ticket": { "main": [[{ "node": "Ticket_existe?", "type": "main", "index": 0 }]] },
+    "Ticket_existe?": { "main": [[{ "node": "Encontrado?", "type": "main", "index": 0 }]] },
+    "Encontrado?": {
+      "main": [
+        [{ "node": "Buscar_interacoes", "type": "main", "index": 0 }],
+        [{ "node": "Responde_404", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar_interacoes": { "main": [[{ "node": "Montar_resposta", "type": "main", "index": 0 }]] },
+    "Montar_resposta": { "main": [[{ "node": "Responde_200", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: Bold Support API
+  description: API de chamados — backend em n8n (webhooks) + PostgreSQL (Supabase)
+  version: 1.0.0
+
+servers:
+  - url: https://dev.boldsolution.com.br/webhook-test
+    description: n8n — ambiente de teste (Listen for test event)
+  - url: https://dev.boldsolution.com.br/webhook
+    description: n8n — produção (requer workflow publicado)
+
+paths:
+  /clientes:
+    post:
+      summary: Cadastrar cliente
+      tags: [Clientes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteInput'
+      responses:
+        '201':
+          description: Cliente criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /clientes/{id}:
+    get:
+      summary: Consultar cliente por ID
+      tags: [Clientes]
+      parameters:
+        - $ref: '#/components/parameters/UuidPath'
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /tickets:
+    get:
+      summary: Listar tickets com filtro
+      tags: [Tickets]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [aberto, em_atendimento, aguardando_cliente, resolvido, cancelado]
+        - name: prioridade
+          in: query
+          schema:
+            type: string
+            enum: [baixa, media, alta]
+      responses:
+        '200':
+          description: Lista de tickets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketListagem'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+    post:
+      summary: Criar ticket
+      tags: [Tickets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketInput'
+      responses:
+        '201':
+          description: Ticket criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /tickets/{id}:
+    get:
+      summary: Consultar ticket com histórico de interações
+      tags: [Tickets]
+      parameters:
+        - $ref: '#/components/parameters/UuidPath'
+      responses:
+        '200':
+          description: Ticket com interações
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketDetalhe'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+components:
+  parameters:
+    UuidPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    ClienteInput:
+      type: object
+      required: [nome, email, telefone]
+      properties:
+        nome:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+        telefone:
+          type: string
+          maxLength: 20
+
+    Cliente:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        email:
+          type: string
+        telefone:
+          type: string
+        criado_em:
+          type: string
+          format: date-time
+
+    TicketInput:
+      type: object
+      required: [cliente_id, titulo, descricao]
+      properties:
+        cliente_id:
+          type: string
+          format: uuid
+        titulo:
+          type: string
+          maxLength: 200
+        descricao:
+          type: string
+        prioridade:
+          type: string
+          enum: [baixa, media, alta]
+          default: media
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        protocolo:
+          type: string
+        cliente_id:
+          type: string
+          format: uuid
+        titulo:
+          type: string
+        descricao:
+          type: string
+        prioridade:
+          type: string
+        status:
+          type: string
+        criado_em:
+          type: string
+          format: date-time
+        atualizado_em:
+          type: string
+          format: date-time
+
+    TicketDetalhe:
+      allOf:
+        - $ref: '#/components/schemas/Ticket'
+        - type: object
+          properties:
+            interacoes:
+              type: array
+              items:
+                $ref: '#/components/schemas/Interacao'
+
+    Interacao:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticket_id:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+          enum: [sistema, cliente, agente]
+        mensagem:
+          type: string
+        criado_em:
+          type: string
+          format: date-time
+
+    TicketListagem:
+      type: object
+      properties:
+        total:
+          type: integer
+        filtros:
+          type: object
+          properties:
+            status:
+              type: string
+              nullable: true
+            prioridade:
+              type: string
+              nullable: true
+        tickets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ticket'
+
+    Erro:
+      type: object
+      properties:
+        erro:
+          type: string
+        codigo:
+          type: string
+
+  responses:
+    ErroValidacao:
+      description: Payload ou parâmetro inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoEncontrado:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
