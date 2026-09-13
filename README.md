@@ -31,7 +31,7 @@ Permitir cadastro de clientes, abertura e consulta de chamados, com histórico d
 | Backend | n8n (webhooks) | Orquestração, validação e resposta HTTP |
 | Banco | PostgreSQL / Supabase | Persistência relacional |
 | Testes | Postman | Validação manual dos endpoints |
-| Frontend | React + Vite | **Etapa 3** — não presente no repositório |
+| Frontend | React + Vite | Tela de login (Etapa 3 em andamento) |
 
 ## Pré-requisitos
 
@@ -47,7 +47,7 @@ O desafio exige divisão clara das entregas no GitHub:
 |--------|-------|--------|
 | [`stage/01-core-api`](../../tree/stage/01-core-api) | CRUD básico (5 rotas) | Concluída |
 | [`stage/02-ticket-operations`](../../tree/stage/02-ticket-operations) | DELETE, PATCH, interações, webhook | Concluída |
-| [`stage/03-frontend`](../../tree/stage/03-frontend) | Frontend React | Pendente |
+| [`stage/03-frontend`](../../tree/stage/03-frontend) | Frontend React — login | Em andamento |
 | [`stage/04-authentication`](../../tree/stage/04-authentication) | Autenticação | Pendente |
 | `main` | Última etapa estável | Etapas 1 e 2 |
 
@@ -101,10 +101,24 @@ Bold-Support/
 │   ├── database.md              # Modelagem e ER
 │   ├── installation.md          # Guia de instalação
 │   └── openapi.yaml             # Contrato OpenAPI 3
+├── frontend/                    # React + Vite (login)
+│   └── public/videos/           # Vídeo do painel esquerdo (login.mp4)
 ├── n8n/workflows/               # Backend (9 workflows)
 ├── postman/                     # Collection de testes
 └── .env.example
 ```
+
+## Frontend (Etapa 3)
+
+Tela de login estilo Pointfy — split-screen com vídeo à esquerda e formulário à direita.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Coloque o vídeo em `frontend/public/videos/login.mp4` (não versionado no Git).
 
 ## Arquitetura
 
@@ -151,7 +165,7 @@ Respostas de erro no formato `{ "erro": "...", "codigo": "..." }` com HTTP 400 (
 
 ## Limitações conhecidas
 
-- Frontend React ainda não desenvolvido (Etapa 3).
+- Etapa 3: apenas tela de login (UI estática); dashboard e auth pendentes.
 - Paths da Etapa 2 usam prefixos únicos (`remover`, `atualizar-status`, `adicionar-interacao`) — exigência do n8n hospedado.
 - Webhook externo usa URL configurável; falha não bloqueia a API (`continueOnFail`).
 

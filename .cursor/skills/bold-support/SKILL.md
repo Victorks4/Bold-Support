@@ -14,7 +14,7 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 | Repo local | `Bold-Support` |
 | GitHub | `https://github.com/Victorks4/Bold-Support` |
 | Branch estável | `main` (Etapas 1 e 2 entregues) |
-| Branch ativa | `stage/03-frontend` (próxima etapa) |
+| Branch ativa | `stage/03-frontend` (login Vite) |
 | Snapshot Etapa 1 | `stage/01-core-api` (congelada, não alterar) |
 
 **Regra:** trabalhar na branch da etapa em curso; ao concluir, merge em `main`. Detalhes em `docs/entregas.md`.
@@ -26,7 +26,7 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 | Backend | **n8n** (webhooks) | **NÃO usar NestJS** |
 | Banco | PostgreSQL / **Supabase** | Projeto `bold-support`, região `us-west-2` |
 | Testes | Postman | Modo teste n8n |
-| Frontend | React + Vite | Etapa 3 — ainda não existe |
+| Frontend | React + Vite em `frontend/` | Login implementado; dashboard pendente |
 
 ## Infraestrutura
 
@@ -114,9 +114,16 @@ Disparar webhook mock em eventos de ticket com campos: `protocolo`, `evento`, `s
 4. Merge `stage/02-ticket-operations` → `main`
 5. Atualizar `docs/entregas.md`
 
+## Etapa 3 — Login (`stage/03-frontend`)
+
+- `frontend/` — React + Vite + Tailwind
+- `public/videos/login.mp4` — vídeo painel esquerdo (local, não commitar)
+- `public/images/` — logos e assets
+- UI espelha login Pointfy; auth real na Etapa 4
+
 ## Etapas futuras
 
-- **Etapa 3:** Frontend React + Vite (`stage/03-frontend`)
+- **Etapa 3b:** Dashboard + integração API
 - **Etapa 4:** Autenticação JWT/OAuth (`stage/04-authentication`)
 
 ## Problemas já resolvidos (não repetir)
@@ -135,6 +142,7 @@ Disparar webhook mock em eventos de ticket com campos: `protocolo`, `evento`, `s
 Bold-Support/
 ├── database/migrations/
 ├── docs/                    # api, architecture, database, installation, openapi, entregas
+├── frontend/                # React + Vite (login)
 ├── n8n/workflows/           # Backend (JSONs exportados)
 ├── .cursor/skills/          # Skills locais (bold-support, project-documentation)
 ├── .env.example

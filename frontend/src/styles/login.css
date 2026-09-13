@@ -1,0 +1,47 @@
+.login-page [data-login-panel],
+.login-page [data-login-form] {
+  opacity: 1;
+}
+
+@media (min-width: 1024px) {
+  .login-page-panel {
+    min-height: 100dvh;
+  }
+}
+
+.login-left-panel {
+  min-height: inherit;
+  background-color: #0a1628;
+}
+
+.login-left-panel__video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.neon-login-submit {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--neon-blue) 35%, transparent),
+    0 8px 28px -8px var(--neon-glow-primary);
+}
+
+.neon-login-submit:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--neon-cyan) 50%, transparent),
+    0 0 28px -4px var(--neon-glow-cyan),
+    0 12px 32px -8px var(--neon-glow-primary);
+}
+
+.neon-input-glow:focus-visible {
+  border-color: color-mix(in srgb, var(--neon-cyan) 55%, var(--color-border));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--neon-cyan) 18%, transparent),
+    0 0 16px -4px var(--neon-glow-cyan);
+  outline: none;
+}
