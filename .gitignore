@@ -1,6 +1,8 @@
 .env
 .env.local
-.cursor/
+.cursor/*
+!.cursor/skills/
+!.cursor/skills/**
 node_modules/
 dist/
 *.log

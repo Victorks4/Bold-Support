@@ -29,6 +29,25 @@ Permitir cadastro de clientes, abertura e consulta de chamados, com histórico d
 - Acesso à instância n8n
 - Postman (recomendado)
 
+## Branches (entregas por etapa)
+
+O desafio exige divisão clara das entregas no GitHub:
+
+| Branch | Etapa | Status |
+|--------|-------|--------|
+| [`etapa-1`](../../tree/etapa-1) | CRUD básico (5 rotas) | Concluída |
+| [`etapa-2`](../../tree/etapa-2) | DELETE, PATCH, interações, webhook | Em desenvolvimento |
+| [`etapa-3`](../../tree/etapa-3) | Frontend React | Pendente |
+| [`etapa-4`](../../tree/etapa-4) | Autenticação | Pendente |
+| `main` | Última etapa estável | Sincronizada com entregas |
+
+Detalhes e checklist: [**docs/entregas.md**](docs/entregas.md)
+
+```bash
+git checkout etapa-1   # revisar só a Etapa 1
+git checkout etapa-2   # continuar desenvolvimento
+```
+
 ## Instalação rápida
 
 ```bash
