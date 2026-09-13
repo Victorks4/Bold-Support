@@ -31,7 +31,7 @@ Permitir cadastro de clientes, abertura e consulta de chamados, com histórico d
 | Backend | n8n (webhooks) | Orquestração, validação e resposta HTTP |
 | Banco | PostgreSQL / Supabase | Persistência relacional |
 | Testes | Postman | Validação manual dos endpoints |
-| Frontend | HTML protótipo → React + Vite | Protótipo em [`frontend/index.html`](frontend/index.html) |
+| Frontend | React + Vite | **Etapa 3** — não presente no repositório |
 
 ## Pré-requisitos
 
@@ -47,7 +47,7 @@ O desafio exige divisão clara das entregas no GitHub:
 |--------|-------|--------|
 | [`stage/01-core-api`](../../tree/stage/01-core-api) | CRUD básico (5 rotas) | Concluída |
 | [`stage/02-ticket-operations`](../../tree/stage/02-ticket-operations) | DELETE, PATCH, interações, webhook | Concluída |
-| [`stage/03-frontend`](../../tree/stage/03-frontend) | Protótipo HTML (cliente + agente) | Em andamento |
+| [`stage/03-frontend`](../../tree/stage/03-frontend) | Frontend React | Pendente |
 | [`stage/04-authentication`](../../tree/stage/04-authentication) | Autenticação | Pendente |
 | `main` | Última etapa estável | Etapas 1 e 2 |
 
@@ -102,21 +102,9 @@ Bold-Support/
 │   ├── installation.md          # Guia de instalação
 │   └── openapi.yaml             # Contrato OpenAPI 3
 ├── n8n/workflows/               # Backend (9 workflows)
-├── frontend/index.html          # Protótipo UI (Etapa 3)
 ├── postman/                     # Collection de testes
 └── .env.example
 ```
-
-## Protótipo frontend
-
-Arquivo único em [`frontend/index.html`](frontend/index.html) — portal do **cliente** (cadastro, abrir chamado, acompanhar) e painel do **agente** (fila, status, respostas).
-
-```bash
-npx serve frontend
-# Abra http://localhost:3000
-```
-
-Configure a base URL da API no botão "Configurar API" (default: produção n8n Bold). Workflows precisam estar ativos.
 
 ## Arquitetura
 
@@ -163,7 +151,7 @@ Respostas de erro no formato `{ "erro": "...", "codigo": "..." }` com HTTP 400 (
 
 ## Limitações conhecidas
 
-- Protótipo HTML na Etapa 3; migração para React+Vite é evolução futura.
+- Frontend React ainda não desenvolvido (Etapa 3).
 - Paths da Etapa 2 usam prefixos únicos (`remover`, `atualizar-status`, `adicionar-interacao`) — exigência do n8n hospedado.
 - Webhook externo usa URL configurável; falha não bloqueia a API (`continueOnFail`).
 

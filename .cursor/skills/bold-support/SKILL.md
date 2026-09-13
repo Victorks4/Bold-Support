@@ -14,7 +14,7 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 | Repo local | `Bold-Support` |
 | GitHub | `https://github.com/Victorks4/Bold-Support` |
 | Branch estável | `main` (Etapas 1 e 2 entregues) |
-| Branch ativa | `stage/03-frontend` (protótipo HTML) |
+| Branch ativa | `stage/03-frontend` (próxima etapa) |
 | Snapshot Etapa 1 | `stage/01-core-api` (congelada, não alterar) |
 
 **Regra:** trabalhar na branch da etapa em curso; ao concluir, merge em `main`. Detalhes em `docs/entregas.md`.
@@ -26,7 +26,7 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 | Backend | **n8n** (webhooks) | **NÃO usar NestJS** |
 | Banco | PostgreSQL / **Supabase** | Projeto `bold-support`, região `us-west-2` |
 | Testes | Postman | Modo teste n8n |
-| Frontend | `frontend/index.html` → React + Vite | Protótipo HTML Etapa 3 |
+| Frontend | React + Vite | Etapa 3 — ainda não existe |
 
 ## Infraestrutura
 
@@ -114,15 +114,9 @@ Disparar webhook mock em eventos de ticket com campos: `protocolo`, `evento`, `s
 4. Merge `stage/02-ticket-operations` → `main`
 5. Atualizar `docs/entregas.md`
 
-## Etapa 3 — Protótipo HTML (`stage/03-frontend`)
-
-- Arquivo: `frontend/index.html` — portal cliente + painel agente
-- Servir: `npx serve frontend`
-- API base configurável (localStorage `bold_api_base`)
-
 ## Etapas futuras
 
-- **Etapa 3b:** Migrar protótipo para React + Vite
+- **Etapa 3:** Frontend React + Vite (`stage/03-frontend`)
 - **Etapa 4:** Autenticação JWT/OAuth (`stage/04-authentication`)
 
 ## Problemas já resolvidos (não repetir)
@@ -142,7 +136,6 @@ Bold-Support/
 ├── database/migrations/
 ├── docs/                    # api, architecture, database, installation, openapi, entregas
 ├── n8n/workflows/           # Backend (JSONs exportados)
-├── frontend/index.html      # Protótipo UI Etapa 3
 ├── .cursor/skills/          # Skills locais (bold-support, project-documentation)
 ├── .env.example
 └── README.md
