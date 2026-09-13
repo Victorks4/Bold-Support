@@ -13,7 +13,7 @@ Padrão: `stage/<número>-<descrição>` — prefixo `stage/` agrupa entregas, n
 | `main` | — | Última etapa estável entregue | Etapas 1 e 2 |
 | `stage/01-core-api` | 1 | Snapshot congelado — CRUD básico (5 rotas) | Concluída |
 | `stage/02-ticket-operations` | 2 | DELETE, PATCH status, interações, webhook externo | Concluída |
-| `stage/03-frontend` | 3 | Frontend React + Vite | Pendente |
+| `stage/03-frontend` | 3 | Protótipo HTML (cliente + agente) | Em andamento |
 | `stage/04-authentication` | 4 | Autenticação JWT/OAuth | Pendente |
 
 ### Fluxo de trabalho
@@ -83,9 +83,23 @@ git checkout stage/02-ticket-operations
 - [x] Atualizar `docs/api.md`, `docs/openapi.yaml` e `README.md`
 - [x] Testar com Postman (produção `/webhook`, workflows ativos)
 
-## Etapa 3 — Pendente
+## Etapa 3 — Em andamento
 
-**Branch:** `stage/03-frontend` — React + Vite consumindo a API n8n.
+**Branch:** `stage/03-frontend`
+
+Protótipo visual e funcional em `frontend/index.html` (HTML + CSS + JS vanilla):
+
+- Modo **cliente:** cadastro, abrir chamado, acompanhar e enviar mensagens
+- Modo **agente:** fila de tickets, alterar status, responder e excluir
+
+Evolução futura: migrar para React + Vite mantendo o mesmo contrato da API.
+
+### Checklist Etapa 3
+
+- [x] Protótipo HTML único com portal cliente + painel agente
+- [x] Consumo da API n8n (9 rotas)
+- [ ] Migrar para React + Vite (opcional / evolução)
+- [ ] Merge em `main` ao concluir
 
 ## Etapa 4 — Pendente
 
