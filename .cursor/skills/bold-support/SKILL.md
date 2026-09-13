@@ -14,8 +14,8 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 | Repo local | `Bold-Support` |
 | GitHub | `https://github.com/Victorks4/Bold-Support` |
 | Branch estável | `main` (última etapa entregue) |
-| Branch ativa | `etapa-2` (desenvolvimento atual) |
-| Snapshot Etapa 1 | `etapa-1` (congelada, não alterar) |
+| Branch ativa | `stage/02-ticket-operations` (desenvolvimento atual) |
+| Snapshot Etapa 1 | `stage/01-core-api` (congelada, não alterar) |
 
 **Regra:** trabalhar na branch da etapa em curso; ao concluir, merge em `main`. Detalhes em `docs/entregas.md`.
 
@@ -71,7 +71,7 @@ Aplicar em **todos** os workflows novos e existentes:
 - UUID válido inexistente → **404**
 - Erro n8n "webhook not registered" → Listen inativo, não é 404 da API
 
-## Etapa 1 — Concluída (branch `etapa-1`)
+## Etapa 1 — Concluída (branch `stage/01-core-api`)
 
 | Método | Rota | Arquivo |
 |--------|------|---------|
@@ -81,7 +81,7 @@ Aplicar em **todos** os workflows novos e existentes:
 | GET | `/tickets` | `GET_Tickets.json` |
 | GET | `/tickets/:id` | `GET_Ticket_por_ID.json` |
 
-## Etapa 2 — Próxima entrega (branch `etapa-2`)
+## Etapa 2 — Próxima entrega (branch `stage/02-ticket-operations`)
 
 ### Rotas a implementar
 
@@ -109,13 +109,13 @@ Disparar webhook mock em eventos de ticket com campos: `protocolo`, `evento`, `s
 1. Exportar workflows para `n8n/workflows/`
 2. Atualizar `docs/api.md`, `docs/openapi.yaml`, `README.md`
 3. Testar no Postman com Listen ativo
-4. Merge `etapa-2` → `main`
+4. Merge `stage/02-ticket-operations` → `main`
 5. Atualizar `docs/entregas.md`
 
 ## Etapas futuras
 
-- **Etapa 3:** Frontend React + Vite (`etapa-3`)
-- **Etapa 4:** Autenticação JWT/OAuth (`etapa-4`)
+- **Etapa 3:** Frontend React + Vite (`stage/03-frontend`)
+- **Etapa 4:** Autenticação JWT/OAuth (`stage/04-authentication`)
 
 ## Problemas já resolvidos (não repetir)
 

@@ -2,33 +2,37 @@
 
 Este documento descreve a divisão de branches no GitHub conforme solicitado no desafio técnico Bold Solution.
 
+## Convenção de nomenclatura
+
+Padrão: `stage/<número>-<descrição>` — prefixo `stage/` agrupa entregas, número com zero à esquerda garante ordenação, nome em kebab-case descreve o escopo.
+
 ## Estratégia de branches
 
-| Branch | Conteúdo | Status |
-|--------|----------|--------|
-| `main` | Última etapa estável entregue | Etapa 1 concluída |
-| `etapa-1` | Snapshot congelado da Etapa 1 (CRUD básico) | Concluída |
-| `etapa-2` | Etapa 1 + DELETE, PATCH status, interações, webhook externo | Em desenvolvimento |
-| `etapa-3` | Etapa 2 + frontend React | Pendente |
-| `etapa-4` | Etapa 3 + autenticação | Pendente |
+| Branch | Etapa | Conteúdo | Status |
+|--------|-------|----------|--------|
+| `main` | — | Última etapa estável entregue | Etapa 1 concluída |
+| `stage/01-core-api` | 1 | Snapshot congelado — CRUD básico (5 rotas) | Concluída |
+| `stage/02-ticket-operations` | 2 | DELETE, PATCH status, interações, webhook externo | Em desenvolvimento |
+| `stage/03-frontend` | 3 | Frontend React + Vite | Pendente |
+| `stage/04-authentication` | 4 | Autenticação JWT/OAuth | Pendente |
 
 ### Fluxo de trabalho
 
 ```mermaid
 gitGraph
-  commit id: "etapa-1"
-  branch etapa-1
+  commit id: "core-api"
+  branch stage01
   checkout main
   commit id: "docs/branches"
-  branch etapa-2
-  checkout etapa-2
-  commit id: "etapa-2 WIP"
+  branch stage02
+  checkout stage02
+  commit id: "ticket-ops WIP"
   checkout main
-  merge etapa-2 id: "merge etapa-2"
+  merge stage02 id: "merge stage-02"
 ```
 
-1. Desenvolver na branch da etapa atual (`etapa-2` agora).
-2. Ao concluir a etapa: merge em `main`, atualizar este documento e congelar snapshot (`git branch -f etapa-N`).
+1. Desenvolver na branch da etapa atual (`stage/02-ticket-operations`).
+2. Ao concluir a etapa: merge em `main`, atualizar este documento e congelar snapshot (`git branch -f stage/0N-...`).
 3. Avaliadores podem fazer checkout da branch específica para revisar apenas aquela entrega.
 
 ### Comandos úteis
@@ -38,15 +42,15 @@ gitGraph
 git branch -a
 
 # Revisar só a Etapa 1
-git checkout etapa-1
+git checkout stage/01-core-api
 
 # Continuar desenvolvimento (Etapa 2)
-git checkout etapa-2
+git checkout stage/02-ticket-operations
 ```
 
 ## Etapa 1 — Concluída
 
-**Branch:** `etapa-1`
+**Branch:** `stage/01-core-api`
 
 | Método | Rota | Workflow |
 |--------|------|----------|
@@ -58,7 +62,7 @@ git checkout etapa-2
 
 ## Etapa 2 — Em desenvolvimento
 
-**Branch:** `etapa-2`
+**Branch:** `stage/02-ticket-operations`
 
 | Método | Rota | Workflow (a criar) | Status |
 |--------|------|-------------------|--------|
@@ -81,8 +85,8 @@ git checkout etapa-2
 
 ## Etapa 3 — Pendente
 
-Frontend React + Vite consumindo a API n8n.
+**Branch:** `stage/03-frontend` — React + Vite consumindo a API n8n.
 
 ## Etapa 4 — Pendente
 
-Autenticação (JWT/OAuth) entre frontend e backend.
+**Branch:** `stage/04-authentication` — Autenticação entre frontend e backend.

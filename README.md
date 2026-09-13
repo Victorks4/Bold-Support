@@ -35,17 +35,17 @@ O desafio exige divisão clara das entregas no GitHub:
 
 | Branch | Etapa | Status |
 |--------|-------|--------|
-| [`etapa-1`](../../tree/etapa-1) | CRUD básico (5 rotas) | Concluída |
-| [`etapa-2`](../../tree/etapa-2) | DELETE, PATCH, interações, webhook | Em desenvolvimento |
-| [`etapa-3`](../../tree/etapa-3) | Frontend React | Pendente |
-| [`etapa-4`](../../tree/etapa-4) | Autenticação | Pendente |
+| [`stage/01-core-api`](../../tree/stage/01-core-api) | CRUD básico (5 rotas) | Concluída |
+| [`stage/02-ticket-operations`](../../tree/stage/02-ticket-operations) | DELETE, PATCH, interações, webhook | Em desenvolvimento |
+| [`stage/03-frontend`](../../tree/stage/03-frontend) | Frontend React | Pendente |
+| [`stage/04-authentication`](../../tree/stage/04-authentication) | Autenticação | Pendente |
 | `main` | Última etapa estável | Sincronizada com entregas |
 
 Detalhes e checklist: [**docs/entregas.md**](docs/entregas.md)
 
 ```bash
-git checkout etapa-1   # revisar só a Etapa 1
-git checkout etapa-2   # continuar desenvolvimento
+git checkout stage/01-core-api          # revisar só a Etapa 1
+git checkout stage/02-ticket-operations # continuar desenvolvimento
 ```
 
 ## Instalação rápida
