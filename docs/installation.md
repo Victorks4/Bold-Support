@@ -6,12 +6,11 @@ Guia para configurar o ambiente após clonar o repositório.
 
 | Ferramenta | Finalidade |
 |------------|------------|
+| **Node.js 20+** e npm | Frontend React (`frontend/`) |
 | Conta **Supabase** (ou PostgreSQL 14+) | Banco de dados |
 | Acesso ao **n8n** (instância Bold Solution) | Backend / webhooks |
 | **Postman** (ou curl) | Testes manuais da API |
 | `psql` ou SQL Editor do Supabase | Aplicar migration |
-
-**Não identificado no código:** `package.json`, Docker Compose ou scripts npm — o projeto Etapa 1 não possui frontend nem servidor Node local.
 
 ## 2. Clone do repositório
 
@@ -124,6 +123,44 @@ Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo*
 | 500 No Respond to Webhook | Ramo IF sem node Respond | Conectar todos os ramos a `Responde_*` |
 | Postman 400 `CLIENTE_ID_INVALIDO` | `cliente_id` vazio no environment | Criar cliente e salvar o `id` retornado |
 
-## 9. Próximos passos
+## 9. Frontend (Etapa 3)
 
-Etapa 2 concluída no repositório. Próximo: frontend React (Etapa 3, branch `stage/03-frontend`).
+O console do agente está em `frontend/`. Dados mock em memória — não requer banco nem n8n para rodar localmente.
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev       # http://localhost:5173
+```
+
+### Variáveis de ambiente do frontend
+
+| Variável | Descrição |
+|----------|-----------|
+| `VITE_N8N_WEBHOOK_BASE_URL` | Base URL dos webhooks n8n (integração futura) |
+
+Os IDs dos workflows (`VITE_WEBHOOK_ID_*`) estão comentados em `frontend/.env.example` — ativar quando conectar a API real.
+
+### Scripts disponíveis
+
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Servidor de desenvolvimento (Vite) |
+| `npm run build` | Build de produção (TypeScript + Vite) |
+| `npm run lint` | Oxlint |
+| `npm run preview` | Preview do build local |
+
+### Fluxo de teste do frontend
+
+1. Acesse `http://localhost:5173`
+2. Na tela de login, clique em **Entrar** (auth mock — qualquer credencial)
+3. Navegue pelo dashboard, fila kanban, chamados, clientes e eventos
+4. Cadastre um cliente em `/clientes` e abra um chamado
+5. Mova cards no kanban em `/fila` e verifique eventos simulados em `/eventos`
+
+Documentação detalhada: [`frontend/README.md`](../frontend/README.md)
+
+## 10. Próximos passos
+
+Etapas 1–3 concluídas no repositório. Próximo: autenticação (Etapa 4, branch `stage/04-authentication`).

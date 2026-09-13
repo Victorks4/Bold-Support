@@ -2,16 +2,18 @@
 
 ## Visão geral
 
-Bold Support é um sistema de chamados (tickets) com backend implementado em **n8n** e persistência em **PostgreSQL** (Supabase). Cada rota HTTP é um workflow n8n independente que orquestra validação, consulta ao banco e resposta JSON.
-
-O frontend React está previsto para a Etapa 3 e **não está presente** no repositório atual.
+Bold Support é um sistema de chamados (tickets) com backend implementado em **n8n**, persistência em **PostgreSQL** (Supabase) e frontend **React** (console do agente). Cada rota HTTP do backend é um workflow n8n independente que orquestra validação, consulta ao banco e resposta JSON.
 
 ```mermaid
 flowchart LR
-  Client[Cliente HTTP / Postman]
+  Browser[Navegador React]
+  Mock[AppDataContext mock]
+  Client[Postman / integrações]
   N8N[n8n Webhooks]
   PG[(PostgreSQL / Supabase)]
 
+  Browser --> Mock
+  Browser -.->|integração futura| N8N
   Client -->|HTTP| N8N
   N8N -->|SQL parametrizado| PG
   N8N -->|JSON| Client
@@ -91,12 +93,69 @@ sequenceDiagram
 
 **Não identificado no código.** As rotas da Etapa 1 são públicas. Autenticação entre frontend e backend é requisito futuro do desafio (Etapa 4).
 
+## Frontend (Etapa 3)
+
+SPA React em `frontend/` com **react-router-dom**. Estado global em `AppDataContext` (dados mock em memória). Stub HTTP em `lib/api/client.ts` preparado para consumir os webhooks n8n.
+
+### Camadas do frontend
+
+| Camada | Localização | Responsabilidade |
+|--------|-------------|------------------|
+| Rotas | `src/App.tsx`, `src/pages/` | Navegação e composição de telas |
+| Layout | `src/components/layout/` | Sidebar, TopBar, AppShell, MobileNav |
+| Domínio | `src/components/{dashboard,queue,tickets,clients,events}/` | UI por feature |
+| Estado | `src/lib/store/AppDataContext.tsx` | CRUD mock de clientes, tickets, eventos |
+| Tipos | `src/lib/types/` | `Cliente`, `Ticket`, `WebhookEvento` |
+| Utilitários | `src/lib/utils/` | Métricas do dashboard, kanban DnD, formatação |
+| Tema | `src/lib/theme/ThemeProvider.tsx` | Modo claro/escuro (localStorage) |
+
+### Rotas do frontend
+
+| Rota | Componente | Descrição |
+|------|------------|-----------|
+| `/` | `LoginPage` | Login mock (sem auth real) |
+| `/dashboard` | `DashboardPage` | Métricas e visão geral |
+| `/fila` | `QueuePage` | Kanban 4 colunas |
+| `/chamados` | `TicketsPage` | Lista com filtros |
+| `/chamados/:id` | `TicketDetailPage` | Detalhe + timeline |
+| `/clientes` | `ClientsPage` | Cadastro + abrir chamado |
+| `/eventos` | `EventsPage` | Log simulado de webhooks |
+
+### Fluxo do agente (mock)
+
+```mermaid
+sequenceDiagram
+  participant A as Agente
+  participant UI as React SPA
+  participant Ctx as AppDataContext
+  participant Log as logger.ts
+
+  A->>UI: Login (mock)
+  UI->>UI: /dashboard
+  A->>UI: Cadastrar cliente
+  UI->>Ctx: addCliente()
+  Ctx->>Log: log ação
+  A->>UI: Abrir chamado
+  UI->>Ctx: addTicket()
+  Ctx->>Ctx: Gera protocolo + interação sistema
+  A->>UI: Mover card no kanban
+  UI->>Ctx: updateTicketStatus()
+  Ctx->>Ctx: Registra evento webhook simulado
+```
+
+> **Escopo:** console do agente Bold. Não há portal self-service para o cliente final.
+
 ## Estrutura de diretórios
 
 ```
 Bold-Support/
 ├── database/migrations/    # Schema SQL versionado
 ├── docs/                   # Documentação técnica
+├── frontend/               # SPA React (console do agente)
+│   └── src/
+│       ├── pages/          # Telas por rota
+│       ├── components/     # UI e layout
+│       └── lib/            # store, mocks, api, types
 ├── n8n/workflows/          # Workflows exportados (backend)
 ├── postman/                # Collection de testes manuais
 └── .env.example            # Variáveis de ambiente (placeholders)
@@ -132,5 +191,5 @@ Produção na instância Bold: `/webhook/{webhookId}/{path}` (workflows ativos).
 
 ## Etapas futuras (não implementadas)
 
-- Frontend React consumindo a API
-- Autenticação JWT/OAuth
+- Integração do frontend com API n8n real (substituir mock em `AppDataContext`)
+- Autenticação JWT/OAuth (Etapa 4)
