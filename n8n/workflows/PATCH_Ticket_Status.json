@@ -1,0 +1,243 @@
+{
+  "name": "PATCH Ticket Status",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "PATCH",
+        "path": "tickets/atualizar-status/:id",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-patch-status",
+      "name": "Webhook_1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "bold-patch-ticket-status"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst id = item.params?.id || item.query?.id;\nconst body = item.body ?? item;\nconst novoStatus = body.status;\n\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\nconst statusValidos = ['aberto', 'em_atendimento', 'aguardando_cliente', 'resolvido', 'cancelado'];\n\nif (!id || !uuidRegex.test(id)) {\n  return [{ json: { valid: false, erro: 'ID do ticket inválido', codigo: 'ID_INVALIDO' } }];\n}\n\nif (!novoStatus || !statusValidos.includes(String(novoStatus))) {\n  return [{ json: { valid: false, erro: 'Status inválido', codigo: 'STATUS_INVALIDO' } }];\n}\n\nreturn [{ json: { valid: true, id, novo_status: String(novoStatus) } }];"
+      },
+      "id": "code-validar-payload",
+      "name": "Validar_payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-payload-valido",
+      "name": "Payload_valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, protocolo, status FROM tickets WHERE id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ $json.id }}"
+        }
+      },
+      "id": "postgres-buscar-ticket",
+      "name": "Buscar_ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [660, 200],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const ticket = $input.first().json;\nconst payload = $('Validar_payload').first().json;\n\nif (!ticket?.id) {\n  return [{ json: { found: false, erro: 'Ticket não encontrado', codigo: 'TICKET_NAO_ENCONTRADO' } }];\n}\n\nconst atual = ticket.status;\nconst novo = payload.novo_status;\n\nif (atual === novo) {\n  return [{ json: { found: true, transicao_valida: false, erro: 'O ticket já está com este status', codigo: 'STATUS_IGUAL' } }];\n}\n\nconst transicoes = {\n  aberto: ['em_atendimento', 'cancelado'],\n  em_atendimento: ['aguardando_cliente', 'resolvido', 'cancelado'],\n  aguardando_cliente: ['em_atendimento', 'resolvido', 'cancelado'],\n  resolvido: [],\n  cancelado: []\n};\n\nconst permitidos = transicoes[atual] ?? [];\nif (!permitidos.includes(novo)) {\n  return [{ json: {\n    found: true,\n    transicao_valida: false,\n    erro: `Transição de '${atual}' para '${novo}' não é permitida`,\n    codigo: 'TRANSICAO_INVALIDA'\n  } }];\n}\n\nreturn [{ json: {\n  found: true,\n  transicao_valida: true,\n  id: ticket.id,\n  protocolo: ticket.protocolo,\n  status_anterior: atual,\n  novo_status: novo\n} }];"
+      },
+      "id": "code-validar-transicao",
+      "name": "Validar_transicao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-encontrado",
+      "name": "Encontrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.transicao_valida }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-transicao-valida",
+      "name": "Transicao_valida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1320, 100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE tickets SET status = $2, atualizado_em = now() WHERE id = $1::uuid RETURNING id, protocolo, cliente_id, titulo, descricao, prioridade, status, criado_em, atualizado_em;",
+        "options": {
+          "queryReplacement": "={{ $json.id }},{{ $json.novo_status }}"
+        }
+      },
+      "id": "postgres-atualizar-status",
+      "name": "Atualizar_status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1540, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ticket = $('Atualizar_status').first().json;\nconst anterior = $('Validar_transicao').first().json.status_anterior;\n\nreturn [{ json: {\n  ticket_id: ticket.id,\n  mensagem: `Status alterado de ${anterior} para ${ticket.status}.`\n} }];"
+      },
+      "id": "code-montar-mensagem",
+      "name": "Montar_mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 0]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO interacoes (ticket_id, tipo, mensagem) VALUES ($1::uuid, 'sistema', $2);",
+        "options": {
+          "queryReplacement": "={{ $json.ticket_id }},{{ $json.mensagem }}"
+        }
+      },
+      "id": "postgres-interacao-sistema",
+      "name": "Interacao_sistema",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1980, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WEBHOOK_EXTERNO_URL || 'https://webhook.site/placeholder-bold-support' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { protocolo: $('Atualizar_status').first().json.protocolo, evento: 'status_alterado', status: $('Atualizar_status').first().json.status } }}",
+        "options": {}
+      },
+      "id": "http-webhook-externo",
+      "name": "Webhook_externo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2200, 0],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Atualizar_status').first().json }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-200",
+      "name": "Responde_200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2420, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-400-transicao",
+      "name": "Responde_400_transicao",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1540, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 404 }
+      },
+      "id": "respond-404",
+      "name": "Responde_404",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 340]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-400",
+      "name": "Responde_400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 420]
+    }
+  ],
+  "connections": {
+    "Webhook_1": { "main": [[{ "node": "Validar_payload", "type": "main", "index": 0 }]] },
+    "Validar_payload": { "main": [[{ "node": "Payload_valido?", "type": "main", "index": 0 }]] },
+    "Payload_valido?": {
+      "main": [
+        [{ "node": "Buscar_ticket", "type": "main", "index": 0 }],
+        [{ "node": "Responde_400", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar_ticket": { "main": [[{ "node": "Validar_transicao", "type": "main", "index": 0 }]] },
+    "Validar_transicao": { "main": [[{ "node": "Encontrado?", "type": "main", "index": 0 }]] },
+    "Encontrado?": {
+      "main": [
+        [{ "node": "Transicao_valida?", "type": "main", "index": 0 }],
+        [{ "node": "Responde_404", "type": "main", "index": 0 }]
+      ]
+    },
+    "Transicao_valida?": {
+      "main": [
+        [{ "node": "Atualizar_status", "type": "main", "index": 0 }],
+        [{ "node": "Responde_400_transicao", "type": "main", "index": 0 }]
+      ]
+    },
+    "Atualizar_status": { "main": [[{ "node": "Montar_mensagem", "type": "main", "index": 0 }]] },
+    "Montar_mensagem": { "main": [[{ "node": "Interacao_sistema", "type": "main", "index": 0 }]] },
+    "Interacao_sistema": { "main": [[{ "node": "Webhook_externo", "type": "main", "index": 0 }]] },
+    "Webhook_externo": { "main": [[{ "node": "Responde_200", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

@@ -59,9 +59,13 @@ Verifique as tabelas: `clientes`, `tickets`, `interacoes`.
 2. **Import from File** para cada JSON em `n8n/workflows/`:
    - `POST_Clientes.json`
    - `GET_Cliente_por_ID.json`
+   - `DELETE_Cliente_por_ID.json`
    - `POST_Tickets.json`
    - `GET_Tickets.json`
    - `GET_Ticket_por_ID.json`
+   - `DELETE_Ticket_por_ID.json`
+   - `PATCH_Ticket_Status.json`
+   - `POST_Ticket_Interacao.json`
 3. Em **cada** node Postgres, vincule a credencial do banco (Session Pooler recomendado no Supabase).
 4. Nos nodes Postgres de **busca** (`Buscar_cliente`, `Buscar_ticket`, `Verificar_cliente`, `Listar_tickets`, `Buscar_interacoes`): ative **Always Output Data** nas configurações do node.
 
@@ -91,18 +95,24 @@ https://dev.boldsolution.com.br/webhook-test/<rota>
 
 > Um Listen = uma requisição. Repita o passo 2 para cada teste.
 
-### Postman
+### Postman (produção)
 
-1. Importe `postman/Bold-Support.postman_collection.json`.
-2. Importe `postman/Bold-Support.postman_environment.json`.
-3. Ative o environment **Bold Support**.
-4. Execute as requests na ordem: criar cliente → consultar → criar ticket → listar → detalhe.
+1. Importe `postman/Bold-Support.postman_collection.json` e `postman/Bold-Support.postman_environment.json`.
+2. Ative o environment **Bold Support — Produção**.
+3. Preencha `cliente_id` e `ticket_id` (crie via workflows da Etapa 1 se necessário).
+4. **Etapa 2** — ordem sugerida: PATCH status → POST interação → DELETE ticket → DELETE cliente (sem tickets).
+
+> URLs da collection usam o formato da instância Bold: `/webhook/{webhookId}/{path}`. Copie a Production URL do node `Webhook_1` no n8n para validar.
+
+### Webhook externo (Etapa 2)
+
+1. Crie um endpoint em [webhook.site](https://webhook.site) e copie a URL.
+2. Configure `WEBHOOK_EXTERNO_URL` no n8n (variável de ambiente) ou edite o node `Webhook_externo` nos workflows.
+3. Ao alterar status ou excluir ticket, verifique o payload `{ protocolo, evento, status }` no webhook.site.
 
 ## 7. Produção
 
-Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo** na instância n8n.
-
-> **Necessita confirmação:** disponibilidade do endpoint de produção depende da configuração da instância Bold Solution.
+Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo** na instância n8n. Na instância Bold, a URL de produção inclui o `webhookId` de cada workflow (ver `docs/api.md`).
 
 ## 8. Solução de problemas
 
@@ -116,4 +126,4 @@ Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo*
 
 ## 9. Próximos passos
 
-Após a Etapa 1: implementar rotas da Etapa 2 (DELETE, PATCH status, POST interações) e frontend React (Etapa 3).
+Etapa 2 concluída no repositório. Próximo: frontend React (Etapa 3, branch `stage/03-frontend`).

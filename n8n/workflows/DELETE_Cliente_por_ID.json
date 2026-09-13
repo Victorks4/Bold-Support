@@ -1,0 +1,226 @@
+{
+  "name": "DELETE Cliente por ID",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "DELETE",
+        "path": "clientes/remover/:id",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-delete-cliente",
+      "name": "Webhook_1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "bold-delete-cliente"
+    },
+    {
+      "parameters": {
+        "jsCode": "const params = $input.first().json.params ?? {};\nconst query = $input.first().json.query ?? {};\nconst id = params.id || query.id;\n\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\n\nif (!id || !uuidRegex.test(id)) {\n  return [{ json: { valid: false, erro: 'ID inválido', codigo: 'ID_INVALIDO' } }];\n}\n\nreturn [{ json: { valid: true, id } }];"
+      },
+      "id": "code-extrair-id",
+      "name": "Extrair_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-id-valido",
+      "name": "Id_valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, nome, email, telefone FROM clientes WHERE id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ $json.id }}"
+        }
+      },
+      "id": "postgres-buscar-cliente",
+      "name": "Buscar_cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [660, 200],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nif (!rows.length || !rows[0].id) {\n  return [{ json: { found: false, erro: 'Cliente não encontrado', codigo: 'CLIENTE_NAO_ENCONTRADO' } }];\n}\nreturn [{ json: { found: true, ...rows[0] } }];"
+      },
+      "id": "code-cliente-existe",
+      "name": "Cliente_existe?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-encontrado",
+      "name": "Encontrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*)::int AS total FROM tickets WHERE cliente_id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ $json.id }}"
+        }
+      },
+      "id": "postgres-contar-tickets",
+      "name": "Contar_tickets",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1320, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "const total = Number($input.first().json.total ?? 0);\nconst cliente = $('Cliente_existe?').first().json;\n\nif (total > 0) {\n  return [{ json: {\n    pode_excluir: false,\n    erro: 'Não é possível excluir cliente com tickets vinculados',\n    codigo: 'CLIENTE_POSSUI_TICKETS'\n  } }];\n}\n\nreturn [{ json: { pode_excluir: true, id: cliente.id, nome: cliente.nome } }];"
+      },
+      "id": "code-verificar-tickets",
+      "name": "Pode_excluir?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 100]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.pode_excluir }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-pode-excluir",
+      "name": "Sem_tickets?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1760, 100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM clientes WHERE id = $1::uuid RETURNING id, nome, email, telefone;",
+        "options": {
+          "queryReplacement": "={{ $json.id }}"
+        }
+      },
+      "id": "postgres-excluir-cliente",
+      "name": "Excluir_cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1980, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { mensagem: 'Cliente removido com sucesso', cliente: $json } }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-200",
+      "name": "Responde_200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2200, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 409 }
+      },
+      "id": "respond-409",
+      "name": "Responde_409",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1980, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 404 }
+      },
+      "id": "respond-404",
+      "name": "Responde_404",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 320]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-400",
+      "name": "Responde_400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 420]
+    }
+  ],
+  "connections": {
+    "Webhook_1": { "main": [[{ "node": "Extrair_id", "type": "main", "index": 0 }]] },
+    "Extrair_id": { "main": [[{ "node": "Id_valido?", "type": "main", "index": 0 }]] },
+    "Id_valido?": {
+      "main": [
+        [{ "node": "Buscar_cliente", "type": "main", "index": 0 }],
+        [{ "node": "Responde_400", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar_cliente": { "main": [[{ "node": "Cliente_existe?", "type": "main", "index": 0 }]] },
+    "Cliente_existe?": { "main": [[{ "node": "Encontrado?", "type": "main", "index": 0 }]] },
+    "Encontrado?": {
+      "main": [
+        [{ "node": "Contar_tickets", "type": "main", "index": 0 }],
+        [{ "node": "Responde_404", "type": "main", "index": 0 }]
+      ]
+    },
+    "Contar_tickets": { "main": [[{ "node": "Pode_excluir?", "type": "main", "index": 0 }]] },
+    "Pode_excluir?": { "main": [[{ "node": "Sem_tickets?", "type": "main", "index": 0 }]] },
+    "Sem_tickets?": {
+      "main": [
+        [{ "node": "Excluir_cliente", "type": "main", "index": 0 }],
+        [{ "node": "Responde_409", "type": "main", "index": 0 }]
+      ]
+    },
+    "Excluir_cliente": { "main": [[{ "node": "Responde_200", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

@@ -119,11 +119,18 @@ Bold-Support/
 | n8n (Bold Solution) | Execução dos workflows e webhooks |
 | Supabase / PostgreSQL | Persistência de clientes, tickets e interações |
 
-> **Necessita confirmação:** URL e disponibilidade do n8n em produção (`/webhook` vs `/webhook-test`) dependem da configuração da instância hospedada.
+Produção na instância Bold: `/webhook/{webhookId}/{path}` (workflows ativos). Teste: `/webhook-test/{path}` com Listen ativo.
+
+## Etapa 2 — Operações e integração (implementada)
+
+| Rota | Regra de negócio |
+|------|------------------|
+| `DELETE /clientes/remover/:id` | Bloqueia se cliente possui tickets (409) |
+| `DELETE /tickets/remover/:id` | CASCADE em interações; webhook `ticket_excluido` |
+| `PATCH /tickets/atualizar-status/:id` | Matriz de transições; interação sistema; webhook `status_alterado` |
+| `POST /tickets/adicionar-interacao/:id` | Tipos `cliente`/`agente`; webhook `interacao_adicionada` |
 
 ## Etapas futuras (não implementadas)
 
-- DELETE cliente/ticket, PATCH status, POST interações
-- Webhook externo em eventos de ticket
 - Frontend React consumindo a API
 - Autenticação JWT/OAuth

@@ -10,9 +10,9 @@ Padrão: `stage/<número>-<descrição>` — prefixo `stage/` agrupa entregas, n
 
 | Branch | Etapa | Conteúdo | Status |
 |--------|-------|----------|--------|
-| `main` | — | Última etapa estável entregue | Etapa 1 concluída |
+| `main` | — | Última etapa estável entregue | Etapa 1 (merge da Etapa 2 pendente) |
 | `stage/01-core-api` | 1 | Snapshot congelado — CRUD básico (5 rotas) | Concluída |
-| `stage/02-ticket-operations` | 2 | DELETE, PATCH status, interações, webhook externo | Em desenvolvimento |
+| `stage/02-ticket-operations` | 2 | DELETE, PATCH status, interações, webhook externo | Concluída |
 | `stage/03-frontend` | 3 | Frontend React + Vite | Pendente |
 | `stage/04-authentication` | 4 | Autenticação JWT/OAuth | Pendente |
 
@@ -60,28 +60,28 @@ git checkout stage/02-ticket-operations
 | GET | `/tickets` | `GET_Tickets.json` |
 | GET | `/tickets/:id` | `GET_Ticket_por_ID.json` |
 
-## Etapa 2 — Em desenvolvimento
+## Etapa 2 — Concluída
 
 **Branch:** `stage/02-ticket-operations`
 
-| Método | Rota | Workflow (a criar) | Status |
-|--------|------|-------------------|--------|
-| DELETE | `/clientes/:id` | `DELETE_Cliente_por_ID.json` | Pendente |
-| DELETE | `/tickets/:id` | `DELETE_Ticket_por_ID.json` | Pendente |
-| PATCH | `/tickets/:id/status` | `PATCH_Ticket_Status.json` | Pendente |
-| POST | `/tickets/:id/interacoes` | `POST_Ticket_Interacao.json` | Pendente |
-| — | Webhook HTTP externo | `WEBHOOK_Ticket_Evento.json` | Pendente |
+| Método | Rota | Workflow | Status |
+|--------|------|----------|--------|
+| DELETE | `/clientes/remover/:id` | `DELETE_Cliente_por_ID.json` | Concluído |
+| DELETE | `/tickets/remover/:id` | `DELETE_Ticket_por_ID.json` | Concluído |
+| PATCH | `/tickets/atualizar-status/:id` | `PATCH_Ticket_Status.json` | Concluído |
+| POST | `/tickets/adicionar-interacao/:id` | `POST_Ticket_Interacao.json` | Concluído |
+| — | Webhook HTTP externo | Nodes em PATCH/DELETE/POST | Concluído |
 
 ### Checklist Etapa 2
 
-- [ ] DELETE cliente (tratar `RESTRICT` se cliente tem tickets)
-- [ ] DELETE ticket (CASCADE remove interações)
-- [ ] PATCH status com validação de enum e `atualizado_em`
-- [ ] POST interação com tipos `cliente` / `agente` / `sistema`
-- [ ] Disparo HTTP externo em eventos de ticket (protocolo, evento, status)
-- [ ] Exportar JSONs em `n8n/workflows/`
-- [ ] Atualizar `docs/api.md`, `docs/openapi.yaml` e `README.md`
-- [ ] Testar com Postman (Listen for test event)
+- [x] DELETE cliente (tratar `RESTRICT` → 409 `CLIENTE_POSSUI_TICKETS`)
+- [x] DELETE ticket (CASCADE remove interações)
+- [x] PATCH status com validação de enum, transições e `atualizado_em`
+- [x] POST interação com tipos `cliente` / `agente`
+- [x] Disparo HTTP externo (protocolo, evento, status)
+- [x] Exportar JSONs em `n8n/workflows/`
+- [x] Atualizar `docs/api.md`, `docs/openapi.yaml` e `README.md`
+- [x] Testar com Postman (produção `/webhook`, workflows ativos)
 
 ## Etapa 3 — Pendente
 

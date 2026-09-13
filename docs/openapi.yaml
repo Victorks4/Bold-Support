@@ -2,13 +2,13 @@ openapi: 3.0.3
 info:
   title: Bold Support API
   description: API de chamados — backend em n8n (webhooks) + PostgreSQL (Supabase)
-  version: 1.0.0
+  version: 2.0.0
 
 servers:
-  - url: https://dev.boldsolution.com.br/webhook-test
-    description: n8n — ambiente de teste (Listen for test event)
   - url: https://dev.boldsolution.com.br/webhook
-    description: n8n — produção (requer workflow publicado)
+    description: n8n — produção (workflows ativos; URL inclui webhookId por rota)
+  - url: https://dev.boldsolution.com.br/webhook-test
+    description: n8n — teste (Listen for test event)
 
 paths:
   /clientes:
@@ -48,6 +48,26 @@ paths:
           $ref: '#/components/responses/ErroValidacao'
         '404':
           $ref: '#/components/responses/NaoEncontrado'
+
+  /clientes/remover/{id}:
+    delete:
+      summary: Remover cliente
+      tags: [Clientes]
+      parameters:
+        - $ref: '#/components/parameters/UuidPath'
+      responses:
+        '200':
+          description: Cliente removido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteRemovido'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
 
   /tickets:
     get:
@@ -112,6 +132,72 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /tickets/remover/{id}:
+    delete:
+      summary: Remover ticket
+      tags: [Tickets]
+      parameters:
+        - $ref: '#/components/parameters/UuidPath'
+      responses:
+        '200':
+          description: Ticket removido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketRemovido'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /tickets/atualizar-status/{id}:
+    patch:
+      summary: Atualizar status do ticket
+      tags: [Tickets]
+      parameters:
+        - $ref: '#/components/parameters/UuidPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketStatusInput'
+      responses:
+        '200':
+          description: Ticket atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /tickets/adicionar-interacao/{id}:
+    post:
+      summary: Adicionar interação ao ticket
+      tags: [Tickets]
+      parameters:
+        - $ref: '#/components/parameters/UuidPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteracaoInput'
+      responses:
+        '201':
+          description: Interação criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interacao'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
 components:
   parameters:
     UuidPath:
@@ -152,6 +238,48 @@ components:
         criado_em:
           type: string
           format: date-time
+
+    TicketStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [aberto, em_atendimento, aguardando_cliente, resolvido, cancelado]
+
+    InteracaoInput:
+      type: object
+      required: [tipo, mensagem]
+      properties:
+        tipo:
+          type: string
+          enum: [cliente, agente]
+        mensagem:
+          type: string
+
+    ClienteRemovido:
+      type: object
+      properties:
+        mensagem:
+          type: string
+        cliente:
+          $ref: '#/components/schemas/Cliente'
+
+    TicketRemovido:
+      type: object
+      properties:
+        mensagem:
+          type: string
+        ticket:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            protocolo:
+              type: string
+            status:
+              type: string
 
     TicketInput:
       type: object
@@ -260,6 +388,12 @@ components:
             $ref: '#/components/schemas/Erro'
     NaoEncontrado:
       description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    Conflito:
+      description: Regra de negócio impede a operação
       content:
         application/json:
           schema:

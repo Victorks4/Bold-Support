@@ -1,0 +1,56 @@
+{
+  "info": {
+    "_postman_id": "bold-support-collection",
+    "name": "Bold Support — Etapa 2",
+    "description": "Rotas da Etapa 2 (produção n8n Bold Solution).\n\n**Pré-requisito:** workflows importados e **ativos** na instância.\n\n**Environment:** `base_url` = `https://dev.boldsolution.com.br/webhook`\n\nCada request inclui o `webhookId` do workflow. Copie a Production URL do node `Webhook_1` no n8n se precisar validar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "PATCH — Atualizar status do ticket",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"em_atendimento\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/bold-patch-ticket-status/tickets/atualizar-status/{{ticket_id}}",
+        "description": "Workflow: `PATCH_Ticket_Status.json`"
+      }
+    },
+    {
+      "name": "POST — Adicionar interação ao ticket",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"cliente\",\n  \"mensagem\": \"Enviei o comprovante por e-mail para análise.\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{base_url}}/bold-post-ticket-interacao/tickets/adicionar-interacao/{{ticket_id}}",
+        "description": "Workflow: `POST_Ticket_Interacao.json`"
+      }
+    },
+    {
+      "name": "DELETE — Remover ticket",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{base_url}}/bold-delete-ticket/tickets/remover/{{ticket_id}}",
+        "description": "Workflow: `DELETE_Ticket_por_ID.json`"
+      }
+    },
+    {
+      "name": "DELETE — Remover cliente",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{base_url}}/bold-delete-cliente/clientes/remover/{{cliente_id}}",
+        "description": "Workflow: `DELETE_Cliente_por_ID.json` — só funciona sem tickets vinculados."
+      }
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "name": "POST Ticket Interacao",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tickets/adicionar-interacao/:id",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-post-interacao",
+      "name": "Webhook_1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "bold-post-ticket-interacao"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst id = item.params?.id || item.query?.id;\nconst body = item.body ?? item;\nconst tipo = body.tipo;\nconst mensagem = body.mensagem == null ? '' : String(body.mensagem).trim();\n\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\nconst tiposValidos = ['cliente', 'agente'];\n\nif (!id || !uuidRegex.test(id)) {\n  return [{ json: { valid: false, erro: 'ID do ticket inválido', codigo: 'ID_INVALIDO' } }];\n}\n\nif (!tipo || !tiposValidos.includes(String(tipo))) {\n  return [{ json: { valid: false, erro: 'Tipo de interação inválido. Use cliente ou agente.', codigo: 'TIPO_INVALIDO' } }];\n}\n\nif (!mensagem) {\n  return [{ json: { valid: false, erro: 'Mensagem obrigatória', codigo: 'MENSAGEM_OBRIGATORIA' } }];\n}\n\nreturn [{ json: { valid: true, ticket_id: id, tipo: String(tipo), mensagem } }];"
+      },
+      "id": "code-validar-payload",
+      "name": "Validar_payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-payload-valido",
+      "name": "Payload_valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, protocolo, status FROM tickets WHERE id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ $json.ticket_id }}"
+        }
+      },
+      "id": "postgres-buscar-ticket",
+      "name": "Buscar_ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [660, 200],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const ticket = $input.first().json;\nconst payload = $('Validar_payload').first().json;\n\nif (!ticket?.id) {\n  return [{ json: { found: false, erro: 'Ticket não encontrado', codigo: 'TICKET_NAO_ENCONTRADO' } }];\n}\n\nreturn [{ json: { found: true, ...payload, protocolo: ticket.protocolo, status: ticket.status } }];"
+      },
+      "id": "code-ticket-existe",
+      "name": "Ticket_existe?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-encontrado",
+      "name": "Encontrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO interacoes (ticket_id, tipo, mensagem) VALUES ($1::uuid, $2, $3) RETURNING id, ticket_id, tipo, mensagem, criado_em;",
+        "options": {
+          "queryReplacement": "={{ $json.ticket_id }},{{ $json.tipo }},{{ $json.mensagem }}"
+        }
+      },
+      "id": "postgres-inserir-interacao",
+      "name": "Inserir_interacao",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1320, 100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE tickets SET atualizado_em = now() WHERE id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ $json.ticket_id }}"
+        }
+      },
+      "id": "postgres-atualizar-ticket",
+      "name": "Atualizar_ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1540, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WEBHOOK_EXTERNO_URL || 'https://webhook.site/placeholder-bold-support' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { protocolo: $('Ticket_existe?').first().json.protocolo, evento: 'interacao_adicionada', status: $('Ticket_existe?').first().json.status } }}",
+        "options": {}
+      },
+      "id": "http-webhook-externo",
+      "name": "Webhook_externo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, 100],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Inserir_interacao').first().json }}",
+        "options": { "responseCode": 201 }
+      },
+      "id": "respond-201",
+      "name": "Responde_201",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1980, 100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 404 }
+      },
+      "id": "respond-404",
+      "name": "Responde_404",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 320]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-400",
+      "name": "Responde_400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 420]
+    }
+  ],
+  "connections": {
+    "Webhook_1": { "main": [[{ "node": "Validar_payload", "type": "main", "index": 0 }]] },
+    "Validar_payload": { "main": [[{ "node": "Payload_valido?", "type": "main", "index": 0 }]] },
+    "Payload_valido?": {
+      "main": [
+        [{ "node": "Buscar_ticket", "type": "main", "index": 0 }],
+        [{ "node": "Responde_400", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar_ticket": { "main": [[{ "node": "Ticket_existe?", "type": "main", "index": 0 }]] },
+    "Ticket_existe?": { "main": [[{ "node": "Encontrado?", "type": "main", "index": 0 }]] },
+    "Encontrado?": {
+      "main": [
+        [{ "node": "Inserir_interacao", "type": "main", "index": 0 }],
+        [{ "node": "Responde_404", "type": "main", "index": 0 }]
+      ]
+    },
+    "Inserir_interacao": { "main": [[{ "node": "Atualizar_ticket", "type": "main", "index": 0 }]] },
+    "Atualizar_ticket": { "main": [[{ "node": "Webhook_externo", "type": "main", "index": 0 }]] },
+    "Webhook_externo": { "main": [[{ "node": "Responde_201", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

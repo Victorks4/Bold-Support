@@ -3,6 +3,7 @@
 .cursor/*
 !.cursor/skills/
 !.cursor/skills/**
+.cursor/skills/project-documentation/
 node_modules/
 dist/
 *.log

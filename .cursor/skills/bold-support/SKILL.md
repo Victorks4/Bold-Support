@@ -14,7 +14,7 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 | Repo local | `Bold-Support` |
 | GitHub | `https://github.com/Victorks4/Bold-Support` |
 | Branch estável | `main` (última etapa entregue) |
-| Branch ativa | `stage/02-ticket-operations` (desenvolvimento atual) |
+| Branch ativa | `stage/03-frontend` (próxima etapa) |
 | Snapshot Etapa 1 | `stage/01-core-api` (congelada, não alterar) |
 
 **Regra:** trabalhar na branch da etapa em curso; ao concluir, merge em `main`. Detalhes em `docs/entregas.md`.
@@ -39,8 +39,10 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 ### n8n hospedado
 
 - URL base: `https://dev.boldsolution.com.br`
-- Teste: `/webhook-test/<rota>` + **Listen for test event** (1 Listen = 1 request)
-- Produção `/webhook/`: pode retornar 404 se workflow não estiver publicado
+- **Produção:** `/webhook/{webhookId}/{path}` — workflows devem estar **ativos**
+- **Teste:** `/webhook-test/<rota>` + **Listen for test event** (1 Listen = 1 request)
+
+Paths Etapa 2 (únicos no n8n): `clientes/remover/:id`, `tickets/remover/:id`, `tickets/atualizar-status/:id`, `tickets/adicionar-interacao/:id`
 
 ### Variáveis (.env.example)
 
@@ -81,16 +83,16 @@ Aplicar em **todos** os workflows novos e existentes:
 | GET | `/tickets` | `GET_Tickets.json` |
 | GET | `/tickets/:id` | `GET_Ticket_por_ID.json` |
 
-## Etapa 2 — Próxima entrega (branch `stage/02-ticket-operations`)
+## Etapa 2 — Concluída (branch `stage/02-ticket-operations`)
 
-### Rotas a implementar
+### Rotas implementadas
 
-| Método | Rota | Arquivo sugerido |
-|--------|------|------------------|
-| DELETE | `/clientes/:id` | `DELETE_Cliente_por_ID.json` |
-| DELETE | `/tickets/:id` | `DELETE_Ticket_por_ID.json` |
-| PATCH | `/tickets/:id/status` | `PATCH_Ticket_Status.json` |
-| POST | `/tickets/:id/interacoes` | `POST_Ticket_Interacao.json` |
+| Método | Rota | Arquivo |
+|--------|------|---------|
+| DELETE | `/clientes/remover/:id` | `DELETE_Cliente_por_ID.json` |
+| DELETE | `/tickets/remover/:id` | `DELETE_Ticket_por_ID.json` |
+| PATCH | `/tickets/atualizar-status/:id` | `PATCH_Ticket_Status.json` |
+| POST | `/tickets/adicionar-interacao/:id` | `POST_Ticket_Interacao.json` |
 
 ### Integração HTTP externa
 
