@@ -12,10 +12,11 @@ dist
 dist-ssr
 *.local
 
-# Vídeos locais (manter .gitkeep em public/videos/)
+# Vídeos locais extras (o login oficial é versionado)
 public/videos/*.mp4
 public/videos/*.webm
 public/videos/*.mov
+!public/videos/boldsupport.mp4
 
 # Editor directories and files
 .vscode/*

@@ -1,0 +1,61 @@
+import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import type { WebhookEvento } from '@/lib/types/evento'
+import { EVENTO_LABELS } from '@/lib/types/evento'
+import { relativeTime } from '@/lib/utils/time'
+
+const tipoVariant: Record<WebhookEvento['tipo'], 'info' | 'success' | 'warning'> = {
+  status_alterado: 'info',
+  interacao_adicionada: 'success',
+  ticket_excluido: 'warning',
+}
+
+export function EventLog({ eventos }: { eventos: WebhookEvento[] }) {
+  if (eventos.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-sm text-gray-500">
+          Nenhum evento registrado ainda. Alterações de status e interações geram notificações aqui.
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {eventos.map((evento, index) => (
+        <motion.div
+          key={evento.id}
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.04, duration: 0.3 }}
+        >
+          <Card className="overflow-hidden">
+            <CardContent className="flex flex-wrap items-start justify-between gap-4 py-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={tipoVariant[evento.tipo]}>{EVENTO_LABELS[evento.tipo]}</Badge>
+                  <Link
+                    to={`/chamados/${evento.ticket_id}`}
+                    className="text-xs font-mono text-[#006AFE] hover:underline"
+                  >
+                    {evento.protocolo}
+                  </Link>
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500 uppercase">
+                    {evento.status}
+                  </span>
+                </div>
+                <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-3 text-xs text-gray-600 dark:bg-gray-900/50 dark:text-gray-300">
+                  {JSON.stringify(evento.payload, null, 2)}
+                </pre>
+              </div>
+              <span className="shrink-0 text-xs text-gray-400">{relativeTime(evento.criado_em)}</span>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
+    </div>
+  )
+}

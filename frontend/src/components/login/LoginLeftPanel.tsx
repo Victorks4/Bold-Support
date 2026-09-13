@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useMotionValue, useSpring, useReducedMotion } from 'framer-motion'
+import { LOGIN_VIDEO_SRC } from '@/lib/assets'
 
 const ORB_SIZE = 43
-const VIDEO_SRC = '/videos/login.mp4'
 
 function centerOrb(mx: ReturnType<typeof useMotionValue<number>>, my: ReturnType<typeof useMotionValue<number>>, el: HTMLElement) {
   const w = el.clientWidth
@@ -64,20 +64,25 @@ export function LoginLeftPanel() {
       <video
         ref={videoRef}
         className={`login-left-panel__video transition-opacity duration-700 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
-        src={VIDEO_SRC}
+        src={LOGIN_VIDEO_SRC}
         autoPlay
         muted
         loop
         playsInline
+        preload="auto"
+        onLoadedData={() => setVideoReady(true)}
         onCanPlay={() => setVideoReady(true)}
         onError={() => setVideoReady(false)}
       />
 
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-black/20" aria-hidden />
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black/70 via-black/25 to-black/10"
+        aria-hidden
+      />
 
       {!reduce && (
         <motion.div
-          className="pointer-events-none absolute z-[2] backdrop-blur-2xl will-change-transform"
+          className="pointer-events-none absolute z-[2] backdrop-blur-2xl will-change-transform mix-blend-screen"
           style={{
             width: ORB_SIZE,
             height: ORB_SIZE,
@@ -91,12 +96,12 @@ export function LoginLeftPanel() {
         />
       )}
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] p-8">
-        <p className="max-w-sm text-lg font-semibold text-white drop-shadow-md">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] p-6 sm:p-8">
+        <p className="max-w-md text-lg font-semibold leading-snug text-white drop-shadow-md sm:text-xl">
           Suporte que acompanha cada chamado do início ao fim.
         </p>
-        <p className="mt-2 max-w-sm text-sm text-blue-100/80">
-          Coloque seu vídeo em <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs">public/videos/login.mp4</code>
+        <p className="mt-2 max-w-sm text-sm text-blue-100/90">
+          Centralize atendimentos, protocolos e histórico em um só lugar.
         </p>
       </div>
     </div>

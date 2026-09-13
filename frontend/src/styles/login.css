@@ -1,3 +1,13 @@
+.login-page {
+  font-family: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+}
+
+.login-page h1,
+.login-page .font-bold {
+  font-weight: 700;
+}
+
 .login-page [data-login-panel],
 .login-page [data-login-form] {
   opacity: 1;
@@ -36,6 +46,11 @@
     0 0 0 1px color-mix(in srgb, var(--neon-cyan) 50%, transparent),
     0 0 28px -4px var(--neon-glow-cyan),
     0 12px 32px -8px var(--neon-glow-primary);
+}
+
+.login-card {
+  border-radius: 1rem;
+  box-shadow: 0 10px 40px rgb(15 23 42 / 0.08);
 }
 
 .neon-input-glow:focus-visible {

@@ -12,7 +12,7 @@ export function Field({ className, ...props }: ComponentProps<'div'>) {
 export function FieldLabel({ className, ...props }: ComponentProps<'label'>) {
   return (
     <label
-      className={cn('text-sm font-medium leading-none', className)}
+      className={cn('text-sm font-medium leading-none text-gray-700 dark:text-gray-200', className)}
       {...props}
     />
   )

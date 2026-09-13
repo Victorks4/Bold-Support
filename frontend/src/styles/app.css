@@ -1,0 +1,115 @@
+.app-shell {
+  font-family: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.app-sidebar {
+  min-height: 100dvh;
+}
+
+@layer utilities {
+  .text-app-heading {
+    @apply text-[#0E121D] dark:text-gray-100;
+  }
+
+  .text-app-muted {
+    @apply text-gray-500 dark:text-gray-400;
+  }
+
+  .text-app-body {
+    @apply text-gray-600 dark:text-gray-300;
+  }
+
+  .bg-app-surface {
+    @apply bg-white dark:bg-[#161B26];
+  }
+
+  .bg-app-muted {
+    @apply bg-gray-50 dark:bg-[#1A2030];
+  }
+
+  .border-app {
+    @apply border-gray-100 dark:border-gray-800;
+  }
+
+  .hover-app-muted {
+    @apply hover:bg-gray-50 dark:hover:bg-gray-800/60;
+  }
+}
+
+/* Logo sidebar — animação hover */
+.bold-logo-img {
+  transition: filter 320ms ease-out;
+  will-change: transform, filter;
+}
+
+.bold-logo-shine {
+  background: linear-gradient(
+    105deg,
+    transparent 28%,
+    rgb(0 106 254 / 0.08) 42%,
+    rgb(255 255 255 / 0.85) 50%,
+    rgb(0 106 254 / 0.08) 58%,
+    transparent 72%
+  );
+  mix-blend-mode: overlay;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+@keyframes bold-logo-wave {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  16% {
+    transform: translate3d(0, -2.5px, 0) rotate(-1.4deg);
+  }
+  34% {
+    transform: translate3d(0, 0.5px, 0) rotate(0.9deg);
+  }
+  52% {
+    transform: translate3d(0, -1.5px, 0) rotate(-0.5deg);
+  }
+  70% {
+    transform: translate3d(0, 0, 0) rotate(0.3deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes bold-logo-shine-sweep {
+  0% {
+    transform: translateX(-130%) skewX(-14deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(230%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+
+.bold-logo-trigger:hover .bold-logo-img {
+  animation: bold-logo-wave 1.35s cubic-bezier(0.34, 1.4, 0.55, 1) both;
+  filter: drop-shadow(0 2px 10px rgb(0 106 254 / 0.22)) drop-shadow(0 6px 20px rgb(0 230 118 / 0.18));
+}
+
+.bold-logo-trigger:hover .bold-logo-shine {
+  animation: bold-logo-shine-sweep 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bold-logo-trigger:hover .bold-logo-img,
+  .bold-logo-trigger:hover .bold-logo-shine {
+    animation: none;
+  }
+
+  .bold-logo-trigger:hover .bold-logo-img {
+    filter: none;
+  }
+}

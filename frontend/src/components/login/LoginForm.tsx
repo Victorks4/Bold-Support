@@ -1,98 +1,103 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { User, Lock, ArrowRight, Headphones } from 'lucide-react'
-import { BoldBrand } from './BoldBrand'
+import { useNavigate } from 'react-router-dom'
+import { ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 
 export function LoginForm() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [lembrar, setLembrar] = useState(false)
+  const [mostrarSenha, setMostrarSenha] = useState(false)
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-10 flex justify-center px-2 lg:hidden">
-        <div className="w-full max-w-sm rounded-2xl border border-black/10 bg-white px-4 py-3.5 shadow-lg shadow-black/10">
-          <BoldBrand />
-        </div>
-      </div>
+    <div className="login-card w-full rounded-2xl border border-gray-100 bg-white px-7 py-9 sm:px-8 sm:py-10">
+      <header className="mb-8">
+        <p className="mb-2 text-xs font-bold tracking-[0.12em] text-[#006AFE] uppercase">
+          Bem-vindo de volta
+        </p>
+        <h1 className="mb-2 text-[1.75rem] font-bold leading-tight tracking-tight text-[#0f172a]">
+          Bold Support
+        </h1>
+        <p className="text-[0.9375rem] leading-relaxed text-gray-500">
+          Console de atendimento para a equipe Bold.
+        </p>
+      </header>
 
-      <div className="mb-8 text-center">
-        <h2 className="mb-2 text-2xl font-bold text-black">Acessar o sistema</h2>
-        <p className="text-gray-500">Digite suas credenciais para entrar no Bold Support</p>
-      </div>
-
-      <form
-        className="space-y-5"
-        onSubmit={(e) => e.preventDefault()}
-      >
+      <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="email" className="text-gray-700">
+            <FieldLabel htmlFor="email" className="text-sm font-semibold text-[#0f172a]">
               Email
             </FieldLabel>
-            <div className="group relative">
-              <User
-                className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-black"
-                aria-hidden
-              />
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="neon-input-glow h-12 border-2 border-gray-200 pl-12 text-base transition-all focus:border-gray-500 focus:ring-gray-500/20"
-              />
-            </div>
+            <Input
+              id="email"
+              type="email"
+              placeholder="voce@empresa.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-11 rounded-xl border-gray-200 bg-white text-[0.9375rem] shadow-none focus-visible:border-[#006AFE] focus-visible:ring-[#006AFE]/15"
+            />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="senha" className="text-gray-700">
+            <FieldLabel htmlFor="senha" className="text-sm font-semibold text-[#0f172a]">
               Senha
             </FieldLabel>
-            <div className="group relative">
-              <Lock
-                className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-black"
-                aria-hidden
-              />
+            <div className="relative">
               <Input
                 id="senha"
-                type="password"
-                placeholder="Digite sua senha"
+                type={mostrarSenha ? 'text' : 'password'}
+                placeholder="••••••••"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                className="neon-input-glow h-12 border-2 border-gray-200 pl-12 text-base transition-all focus:border-gray-500 focus:ring-gray-500/20"
+                className="h-11 rounded-xl border-gray-200 bg-white pr-11 text-[0.9375rem] shadow-none focus-visible:border-[#006AFE] focus-visible:ring-[#006AFE]/15"
               />
+              <button
+                type="button"
+                onClick={() => setMostrarSenha((v) => !v)}
+                className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-gray-400 transition-colors hover:text-gray-700"
+                aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+              >
+                {mostrarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
           </Field>
         </FieldGroup>
 
-        <motion.div
-          className="w-full"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.986 }}
-          transition={{ type: 'spring', stiffness: 520, damping: 32 }}
-        >
-          <Button
+        <div className="flex items-center justify-between gap-4">
+          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={lembrar}
+              onChange={(e) => setLembrar(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-[#006AFE] focus:ring-[#006AFE]/30"
+            />
+            Lembrar-me
+          </label>
+          <button
             type="button"
-            className="neon-login-submit h-12 w-full cursor-pointer border border-blue-500/34 bg-gradient-to-br from-[#2875f0] to-[#2061d9] text-base font-semibold text-white transition-[box-shadow,color] hover:from-[#2e7efb] hover:to-[#2567ea]"
+            className="text-sm font-semibold text-[#006AFE] transition-colors hover:text-[#0058D6]"
           >
-            Entrar
-            <ArrowRight className="ml-2 h-5 w-5 shrink-0" />
-          </Button>
-        </motion.div>
+            Esqueci minha senha
+          </button>
+        </div>
+
+        <Button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="h-11 w-full rounded-xl bg-[#006AFE] text-[0.9375rem] font-semibold text-white shadow-sm hover:bg-[#0058D6]"
+        >
+          Entrar
+          <ArrowRight className="h-5 w-5" />
+        </Button>
       </form>
 
-      <div className="mt-6 flex items-center gap-3 rounded-xl border border-cyan-200/80 bg-blue-50/60 p-3 shadow-[0_0_20px_-8px_var(--neon-glow-cyan)]">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2875f0] to-[#2061d9] text-white">
-          <Headphones className="h-5 w-5" aria-hidden />
-        </div>
-        <p className="text-left text-sm leading-snug text-blue-950/85">
-          Após o login, agentes gerenciam chamados e clientes acompanham o protocolo em tempo real.
-        </p>
-      </div>
+      <p className="mt-8 text-center text-xs text-gray-400">
+        Acesso protegido para equipes autorizadas.
+      </p>
     </div>
   )
 }

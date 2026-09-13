@@ -1,18 +1,28 @@
 @import 'tailwindcss';
+@import '@fontsource/geist-sans/latin-400.css';
+@import '@fontsource/geist-sans/latin-500.css';
+@import '@fontsource/geist-sans/latin-600.css';
+@import '@fontsource/geist-sans/latin-700.css';
 @import './styles/login.css';
+@import './styles/app.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: 'Geist', 'Segoe UI', system-ui, sans-serif;
-  --color-background: #f4f7fb;
-  --color-foreground: #0a0a0a;
+  --font-sans: 'Geist Sans', 'Segoe UI', system-ui, sans-serif;
+  --color-background: #f3f4f6;
+  --color-primary: #006afe;
+  --color-primary-hover: #0058d6;
+  --color-accent: #00e676;
+  --color-foreground: #0e121d;
   --color-destructive: #dc2626;
   --color-muted-foreground: #6b7280;
   --color-border: #e5e7eb;
   --color-ring: #9ca3af;
-  --neon-blue: #3b82f6;
-  --neon-cyan: #22d3ee;
-  --neon-glow-primary: rgb(59 130 246 / 0.35);
-  --neon-glow-cyan: rgb(34 211 238 / 0.4);
+  --neon-blue: #006afe;
+  --neon-green: #00e676;
+  --neon-glow-primary: rgb(0 106 254 / 0.35);
+  --neon-glow-green: rgb(0 230 118 / 0.4);
 }
 
 @layer base {
@@ -23,4 +33,15 @@
   body {
     @apply m-0 min-h-dvh bg-background font-sans text-foreground antialiased;
   }
+
+  html.dark body {
+    color-scheme: dark;
+  }
+}
+
+.dark {
+  --color-background: #0e121d;
+  --color-foreground: #f3f4f6;
+  --color-muted-foreground: #9ca3af;
+  --color-border: #2a3142;
 }
