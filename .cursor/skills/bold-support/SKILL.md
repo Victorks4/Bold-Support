@@ -13,7 +13,7 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 |------|-------|
 | Repo local | `Bold-Support` |
 | GitHub | `https://github.com/Victorks4/Bold-Support` |
-| Branch estável | `main` (última etapa entregue) |
+| Branch estável | `main` (Etapas 1 e 2 entregues) |
 | Branch ativa | `stage/03-frontend` (próxima etapa) |
 | Snapshot Etapa 1 | `stage/01-core-api` (congelada, não alterar) |
 

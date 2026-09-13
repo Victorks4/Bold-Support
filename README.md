@@ -49,7 +49,7 @@ O desafio exige divisão clara das entregas no GitHub:
 | [`stage/02-ticket-operations`](../../tree/stage/02-ticket-operations) | DELETE, PATCH, interações, webhook | Concluída |
 | [`stage/03-frontend`](../../tree/stage/03-frontend) | Frontend React | Pendente |
 | [`stage/04-authentication`](../../tree/stage/04-authentication) | Autenticação | Pendente |
-| `main` | Última etapa estável | Etapa 1 (merge da Etapa 2 pendente) |
+| `main` | Última etapa estável | Etapas 1 e 2 |
 
 Detalhes e checklist: [**docs/entregas.md**](docs/entregas.md)
 

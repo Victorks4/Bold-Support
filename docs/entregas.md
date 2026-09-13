@@ -10,7 +10,7 @@ Padrão: `stage/<número>-<descrição>` — prefixo `stage/` agrupa entregas, n
 
 | Branch | Etapa | Conteúdo | Status |
 |--------|-------|----------|--------|
-| `main` | — | Última etapa estável entregue | Etapa 1 (merge da Etapa 2 pendente) |
+| `main` | — | Última etapa estável entregue | Etapas 1 e 2 |
 | `stage/01-core-api` | 1 | Snapshot congelado — CRUD básico (5 rotas) | Concluída |
 | `stage/02-ticket-operations` | 2 | DELETE, PATCH status, interações, webhook externo | Concluída |
 | `stage/03-frontend` | 3 | Frontend React + Vite | Pendente |
