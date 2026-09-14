@@ -8,7 +8,7 @@ Permitir cadastro de clientes, abertura e consulta de chamados, com histórico d
 
 ## Funcionalidades
 
-### Etapa 1 — API básica
+### Etapa 1 - API básica
 
 - Cadastrar cliente (`POST /clientes`)
 - Consultar cliente por ID (`GET /clientes/:id`)
@@ -16,7 +16,7 @@ Permitir cadastro de clientes, abertura e consulta de chamados, com histórico d
 - Listar tickets com filtro por status e/ou prioridade (`GET /tickets`)
 - Consultar ticket com histórico de interações (`GET /tickets/:id`)
 
-### Etapa 2 — Regras de negócio e integração
+### Etapa 2 - Regras de negócio e integração
 
 - Remover cliente sem tickets (`DELETE /clientes/remover/:id`)
 - Remover ticket (`DELETE /tickets/remover/:id`)
