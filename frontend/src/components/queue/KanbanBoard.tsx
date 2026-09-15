@@ -4,6 +4,7 @@ import { StatusBadge } from '@/components/tickets/StatusBadge'
 import type { Ticket, TicketStatus } from '@/lib/types/ticket'
 import { STATUS_LABELS } from '@/lib/types/ticket'
 import { canDropInColumn, resolveDropStatus, type KanbanColumnKey } from '@/lib/utils/kanban-dnd'
+import { sortByPrioridade } from '@/lib/utils/ticket-sort'
 import { cn } from '@/lib/utils'
 
 const COLUMNS: { key: KanbanColumnKey; label: string; accent: string }[] = [
@@ -27,7 +28,7 @@ function getColumnTickets(tickets: Ticket[], column: KanbanColumnKey): Ticket[] 
       .filter((t) => t.status === 'resolvido' || t.status === 'cancelado')
       .sort((a, b) => new Date(b.atualizado_em).getTime() - new Date(a.atualizado_em).getTime())
   }
-  return tickets.filter((t) => t.status === column)
+  return sortByPrioridade(tickets.filter((t) => t.status === column))
 }
 
 export function KanbanBoard({ tickets, getClienteNome, onStatusChange }: KanbanBoardProps) {

@@ -4,14 +4,18 @@ import { Card, CardContent } from '@/components/ui/card'
 type StatCardProps = {
   label: string
   value: string | number
-  delta: string
-  trend: 'up' | 'down' | 'neutral'
+  delta?: string
+  trend?: 'up' | 'down' | 'neutral'
 }
 
-export function StatCard({ label, value, delta, trend }: StatCardProps) {
+export function StatCard({ label, value, delta, trend = 'neutral' }: StatCardProps) {
   const TrendIcon = trend === 'down' ? ArrowDownRight : ArrowUpRight
   const deltaColor =
-    trend === 'up' ? 'text-emerald-600 dark:text-emerald-400' : trend === 'down' ? 'text-emerald-600 dark:text-emerald-400' : 'text-app-muted'
+    trend === 'up'
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : trend === 'down'
+        ? 'text-red-600 dark:text-red-400'
+        : 'text-app-muted'
 
   return (
     <Card>
@@ -21,7 +25,7 @@ export function StatCard({ label, value, delta, trend }: StatCardProps) {
           {trend !== 'neutral' && <TrendIcon className="h-4 w-4 text-gray-300 dark:text-gray-600" />}
         </div>
         <p className="text-app-heading mt-2 text-3xl font-bold">{value}</p>
-        <p className={`mt-1 text-xs font-medium ${deltaColor}`}>{delta}</p>
+        {delta && <p className={`mt-1 text-xs font-medium ${deltaColor}`}>{delta}</p>}
       </CardContent>
     </Card>
   )

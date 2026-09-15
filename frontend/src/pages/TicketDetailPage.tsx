@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Bot, MessageSquare, Trash2, User } from 'lucide-react'
@@ -32,10 +32,19 @@ const tipoLabel: Record<InteracaoTipo, string> = {
 export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { getTicketById, getClienteNome, updateTicketStatus, addInteracao, removeTicket } = useAppData()
+  const { getTicketById, getClienteNome, updateTicketStatus, addInteracao, removeTicket, loadTicketDetail, isLoading } =
+    useAppData()
   const ticket = id ? getTicketById(id) : undefined
   const [mensagem, setMensagem] = useState('')
   const [registroCliente, setRegistroCliente] = useState('')
+
+  useEffect(() => {
+    if (id) void loadTicketDetail(id)
+  }, [id, loadTicketDetail])
+
+  if (isLoading && !ticket) {
+    return <p className="text-app-muted py-12 text-center text-sm">Carregando chamado...</p>
+  }
 
   if (!ticket) {
     return (
@@ -53,27 +62,27 @@ export function TicketDetailPage() {
     (a, b) => new Date(a.criado_em).getTime() - new Date(b.criado_em).getTime(),
   )
 
-  function handleStatusChange(status: TicketStatus) {
-    updateTicketStatus(ticket!.id, status)
+  async function handleStatusChange(status: TicketStatus) {
+    await updateTicketStatus(ticket!.id, status)
   }
 
-  function handleSendMessage(e: React.FormEvent) {
+  async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault()
     if (!mensagem.trim()) return
-    addInteracao(ticket!.id, 'agente', mensagem.trim())
+    await addInteracao(ticket!.id, 'agente', mensagem.trim())
     setMensagem('')
   }
 
-  function handleClienteRegistro(e: React.FormEvent) {
+  async function handleClienteRegistro(e: React.FormEvent) {
     e.preventDefault()
     if (!registroCliente.trim()) return
-    addInteracao(ticket!.id, 'cliente', registroCliente.trim())
+    await addInteracao(ticket!.id, 'cliente', registroCliente.trim())
     setRegistroCliente('')
   }
 
-  function handleRemove() {
+  async function handleRemove() {
     if (!window.confirm('Encerrar e remover este chamado? Esta ação não pode ser desfeita.')) return
-    removeTicket(ticket!.id)
+    await removeTicket(ticket!.id)
     navigate('/chamados')
   }
 
@@ -156,7 +165,7 @@ export function TicketDetailPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               {allowedStatuses.length === 0 ? (
-                <p className="text-xs text-gray-500">Status terminal — sem transições disponíveis.</p>
+                <p className="text-xs text-gray-500">Status terminal. Sem transições disponíveis.</p>
               ) : (
                 allowedStatuses.map((s) => (
                   <Button

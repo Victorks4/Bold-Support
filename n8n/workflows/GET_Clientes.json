@@ -1,0 +1,61 @@
+{
+  "name": "GET_Clientes",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "clientes",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-get-clientes",
+      "name": "Webhook_1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "bold-get-clientes"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, nome, email, telefone, criado_em FROM clientes ORDER BY criado_em DESC;",
+        "options": {}
+      },
+      "id": "postgres-listar-clientes",
+      "name": "Listar_clientes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [220, 300],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const clientes = $input.all()\n  .map(item => item.json)\n  .filter(row => row.id);\n\nreturn [{ json: {\n  total: clientes.length,\n  clientes\n} }];"
+      },
+      "id": "code-formatar-lista",
+      "name": "Formatar_lista",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-200",
+      "name": "Responde_200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 300]
+    }
+  ],
+  "connections": {
+    "Webhook_1": { "main": [[{ "node": "Listar_clientes", "type": "main", "index": 0 }]] },
+    "Listar_clientes": { "main": [[{ "node": "Formatar_lista", "type": "main", "index": 0 }]] },
+    "Formatar_lista": { "main": [[{ "node": "Responde_200", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

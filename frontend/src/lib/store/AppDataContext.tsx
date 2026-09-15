@@ -1,487 +1,228 @@
 import {
-
   createContext,
-
   useCallback,
-
   useContext,
-
+  useEffect,
   useMemo,
-
   useState,
-
   type ReactNode,
-
 } from 'react'
-
+import * as clientesApi from '@/lib/api/clientes'
+import * as ticketsApi from '@/lib/api/tickets'
+import { ApiError } from '@/lib/api/client'
 import { logger } from '@/lib/logger'
-
-import { initialClientes } from '@/lib/mocks/clients'
-
-import { initialEventos } from '@/lib/mocks/eventos'
-
-import { initialTickets } from '@/lib/mocks/tickets'
-
 import type { Cliente, ClienteInput } from '@/lib/types/cliente'
-
 import type { WebhookEvento, WebhookEventoTipo } from '@/lib/types/evento'
-
-import type {
-
-  Interacao,
-
-  InteracaoTipo,
-
-  Ticket,
-
-  TicketInput,
-
-  TicketStatus,
-
-} from '@/lib/types/ticket'
-
-
+import type { InteracaoTipo, Ticket, TicketInput, TicketStatus } from '@/lib/types/ticket'
+import { sortByPrioridade } from '@/lib/utils/ticket-sort'
 
 interface AppDataContextValue {
-
   clientes: Cliente[]
-
   tickets: Ticket[]
-
   eventos: WebhookEvento[]
-
-  addCliente: (input: ClienteInput) => Cliente
-
-  addTicket: (input: TicketInput) => Ticket
-
+  isLoading: boolean
+  error: string | null
+  refresh: () => Promise<void>
+  addCliente: (input: ClienteInput) => Promise<Cliente>
+  addTicket: (input: TicketInput) => Promise<Ticket>
   getClienteById: (id: string) => Cliente | undefined
-
   getTicketById: (id: string) => Ticket | undefined
-
   getClienteNome: (clienteId: string) => string
-
   countTicketsByCliente: (clienteId: string) => number
-
-  updateTicketStatus: (ticketId: string, status: TicketStatus) => void
-
-  addInteracao: (ticketId: string, tipo: InteracaoTipo, mensagem: string) => void
-
-  removeTicket: (ticketId: string) => void
-
+  updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>
+  addInteracao: (ticketId: string, tipo: InteracaoTipo, mensagem: string) => Promise<void>
+  removeTicket: (ticketId: string) => Promise<void>
+  loadTicketDetail: (ticketId: string) => Promise<void>
 }
-
-
 
 const AppDataContext = createContext<AppDataContextValue | null>(null)
 
-
-
 function generateId(): string {
-
   return crypto.randomUUID()
-
 }
-
-
-
-function generateProtocolo(): string {
-
-  const date = new Date()
-
-  const y = date.getFullYear()
-
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-
-  const d = String(date.getDate()).padStart(2, '0')
-
-  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase()
-
-  return `TKT-${y}${m}${d}-${suffix}`
-
-}
-
-
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-
-  const [clientes, setClientes] = useState<Cliente[]>(initialClientes)
-
-  const [tickets, setTickets] = useState<Ticket[]>(initialTickets)
-
-  const [eventos, setEventos] = useState<WebhookEvento[]>(initialEventos)
-
-
+  const [clientes, setClientes] = useState<Cliente[]>([])
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [eventos, setEventos] = useState<WebhookEvento[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const pushWebhookEvent = useCallback(
-
     (tipo: WebhookEventoTipo, ticket: Ticket, payload: Record<string, unknown>) => {
-
       const evento: WebhookEvento = {
-
         id: generateId(),
-
         tipo,
-
         protocolo: ticket.protocolo,
-
         ticket_id: ticket.id,
-
         payload,
-
         criado_em: new Date().toISOString(),
-
-        status: 'simulado',
-
+        status: 'entregue',
       }
-
       setEventos((prev) => [evento, ...prev])
-
       logger.info('webhook_event', { tipo, protocolo: ticket.protocolo })
-
     },
-
     [],
-
   )
 
+  const refresh = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const [clientesData, ticketsData] = await Promise.all([
+        clientesApi.listClientes(),
+        ticketsApi.fetchAllTickets(),
+      ])
+      setClientes(clientesData)
+      setTickets(ticketsData)
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : 'Não foi possível carregar os dados da API.'
+      setError(message)
+      logger.error('bootstrap_failed', { message })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
 
   const getClienteById = useCallback(
-
     (id: string) => clientes.find((c) => c.id === id),
-
     [clientes],
-
   )
-
-
 
   const getTicketById = useCallback(
-
     (id: string) => tickets.find((t) => t.id === id),
-
     [tickets],
-
   )
-
-
 
   const getClienteNome = useCallback(
-
     (clienteId: string) => getClienteById(clienteId)?.nome ?? 'Cliente desconhecido',
-
     [getClienteById],
-
   )
-
-
 
   const countTicketsByCliente = useCallback(
-
     (clienteId: string) => tickets.filter((t) => t.cliente_id === clienteId).length,
-
     [tickets],
-
   )
 
-
-
-  const addCliente = useCallback((input: ClienteInput): Cliente => {
-
-    const cliente: Cliente = {
-
-      id: generateId(),
-
-      ...input,
-
-      criado_em: new Date().toISOString(),
-
-    }
-
+  const addCliente = useCallback(async (input: ClienteInput): Promise<Cliente> => {
+    const cliente = await clientesApi.createCliente(input)
     setClientes((prev) => [cliente, ...prev])
-
     logger.info('cliente_created', { id: cliente.id, nome: cliente.nome })
-
     return cliente
-
   }, [])
 
-
-
-  const addTicket = useCallback((input: TicketInput): Ticket => {
-
-    const now = new Date().toISOString()
-
-    const ticketId = generateId()
-
-    const interacao: Interacao = {
-
-      id: generateId(),
-
-      ticket_id: ticketId,
-
-      tipo: 'sistema',
-
-      mensagem: 'Chamado aberto pelo agente no console Bold Support.',
-
-      criado_em: now,
-
-    }
-
-    const ticket: Ticket = {
-
-      id: ticketId,
-
-      protocolo: generateProtocolo(),
-
-      ...input,
-
-      status: 'aberto',
-
-      criado_em: now,
-
-      atualizado_em: now,
-
-      interacoes: [interacao],
-
-    }
-
-    setTickets((prev) => [ticket, ...prev])
-
+  const addTicket = useCallback(async (input: TicketInput): Promise<Ticket> => {
+    const ticket = await ticketsApi.createTicket(input)
+    setTickets((prev) => sortByPrioridade([ticket, ...prev]))
     logger.info('ticket_created', { id: ticket.id, protocolo: ticket.protocolo })
-
     return ticket
-
   }, [])
 
-
+  const loadTicketDetail = useCallback(async (ticketId: string) => {
+    const ticket = await ticketsApi.getTicket(ticketId)
+    setTickets((prev) => {
+      const exists = prev.some((t) => t.id === ticketId)
+      if (!exists) return sortByPrioridade([ticket, ...prev])
+      return prev.map((t) => (t.id === ticketId ? ticket : t))
+    })
+  }, [])
 
   const updateTicketStatus = useCallback(
-
-    (ticketId: string, status: TicketStatus) => {
-
-      const now = new Date().toISOString()
-
+    async (ticketId: string, status: TicketStatus) => {
+      const previous = tickets.find((t) => t.id === ticketId)
+      const updated = await ticketsApi.patchTicketStatus(ticketId, status)
       setTickets((prev) =>
-
-        prev.map((t) => {
-
-          if (t.id !== ticketId) return t
-
-          const interacao: Interacao = {
-
-            id: generateId(),
-
-            ticket_id: ticketId,
-
-            tipo: 'sistema',
-
-            mensagem: `Status alterado para ${status.replace(/_/g, ' ')}.`,
-
-            criado_em: now,
-
-          }
-
-          logger.info('status_changed', { ticketId, from: t.status, to: status })
-
-          pushWebhookEvent('status_alterado', t, {
-
-            status_anterior: t.status,
-
-            status_novo: status,
-
-          })
-
-          return {
-
-            ...t,
-
-            status,
-
-            atualizado_em: now,
-
-            interacoes: [...(t.interacoes ?? []), interacao],
-
-          }
-
-        }),
-
+        sortByPrioridade(prev.map((t) => (t.id === ticketId ? { ...t, ...updated } : t))),
       )
-
+      if (previous) {
+        pushWebhookEvent('status_alterado', updated, {
+          status_anterior: previous.status,
+          status_novo: status,
+        })
+      }
+      logger.info('status_changed', { ticketId, to: status })
     },
-
-    [pushWebhookEvent],
-
+    [tickets, pushWebhookEvent],
   )
-
-
 
   const addInteracao = useCallback(
-
-    (ticketId: string, tipo: InteracaoTipo, mensagem: string) => {
-
-      const now = new Date().toISOString()
-
-      setTickets((prev) =>
-
-        prev.map((t) => {
-
-          if (t.id !== ticketId) return t
-
-          const interacao: Interacao = {
-
-            id: generateId(),
-
-            ticket_id: ticketId,
-
-            tipo,
-
-            mensagem,
-
-            criado_em: now,
-
-          }
-
-          logger.info('interacao_added', { ticketId, tipo })
-
-          if (tipo === 'agente' || tipo === 'cliente') {
-
-            pushWebhookEvent('interacao_adicionada', t, {
-
-              tipo,
-
-              mensagem_preview: mensagem.slice(0, 80),
-
-            })
-
-          }
-
-          return {
-
-            ...t,
-
-            atualizado_em: now,
-
-            interacoes: [...(t.interacoes ?? []), interacao],
-
-          }
-
-        }),
-
-      )
-
+    async (ticketId: string, tipo: InteracaoTipo, mensagem: string) => {
+      const ticket = tickets.find((t) => t.id === ticketId)
+      await ticketsApi.addTicketInteracao(ticketId, tipo, mensagem)
+      await loadTicketDetail(ticketId)
+      if (ticket && (tipo === 'agente' || tipo === 'cliente')) {
+        pushWebhookEvent('interacao_adicionada', ticket, {
+          tipo,
+          mensagem_preview: mensagem.slice(0, 80),
+        })
+      }
+      logger.info('interacao_added', { ticketId, tipo })
     },
-
-    [pushWebhookEvent],
-
+    [tickets, loadTicketDetail, pushWebhookEvent],
   )
-
-
 
   const removeTicket = useCallback(
-
-    (ticketId: string) => {
-
-      setTickets((prev) => {
-
-        const ticket = prev.find((t) => t.id === ticketId)
-
-        if (ticket) {
-
-          pushWebhookEvent('ticket_excluido', ticket, { motivo: 'removido pelo agente' })
-
-          logger.info('ticket_removed', { ticketId, protocolo: ticket.protocolo })
-
-        }
-
-        return prev.filter((t) => t.id !== ticketId)
-
-      })
-
+    async (ticketId: string) => {
+      const ticket = tickets.find((t) => t.id === ticketId)
+      await ticketsApi.deleteTicket(ticketId)
+      if (ticket) {
+        pushWebhookEvent('ticket_excluido', ticket, { motivo: 'removido pelo agente' })
+        logger.info('ticket_removed', { ticketId, protocolo: ticket.protocolo })
+      }
+      setTickets((prev) => prev.filter((t) => t.id !== ticketId))
     },
-
-    [pushWebhookEvent],
-
+    [tickets, pushWebhookEvent],
   )
-
-
 
   const value = useMemo(
-
     () => ({
-
       clientes,
-
       tickets,
-
       eventos,
-
+      isLoading,
+      error,
+      refresh,
       addCliente,
-
       addTicket,
-
       getClienteById,
-
       getTicketById,
-
       getClienteNome,
-
       countTicketsByCliente,
-
       updateTicketStatus,
-
       addInteracao,
-
       removeTicket,
-
+      loadTicketDetail,
     }),
-
     [
-
       clientes,
-
       tickets,
-
       eventos,
-
+      isLoading,
+      error,
+      refresh,
       addCliente,
-
       addTicket,
-
       getClienteById,
-
       getTicketById,
-
       getClienteNome,
-
       countTicketsByCliente,
-
       updateTicketStatus,
-
       addInteracao,
-
       removeTicket,
-
+      loadTicketDetail,
     ],
-
   )
 
-
-
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
-
 }
-
-
 
 export function useAppData() {
-
   const ctx = useContext(AppDataContext)
-
   if (!ctx) throw new Error('useAppData must be used within AppDataProvider')
-
   return ctx
-
 }
-
-

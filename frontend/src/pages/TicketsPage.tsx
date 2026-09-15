@@ -10,6 +10,7 @@ import { Select } from '@/components/ui/select'
 import { useAppData } from '@/lib/store/AppDataContext'
 import type { TicketPrioridade, TicketStatus } from '@/lib/types/ticket'
 import { PRIORIDADE_LABELS, STATUS_LABELS } from '@/lib/types/ticket'
+import { sortByPrioridade } from '@/lib/utils/ticket-sort'
 
 export function TicketsPage() {
   const { tickets, getClienteNome } = useAppData()
@@ -20,7 +21,7 @@ export function TicketsPage() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    return tickets.filter((t) => {
+    const filtered = tickets.filter((t) => {
       if (statusFilter && t.status !== statusFilter) return false
       if (prioridadeFilter && t.prioridade !== prioridadeFilter) return false
       if (!q) return true
@@ -31,6 +32,7 @@ export function TicketsPage() {
         cliente.includes(q)
       )
     })
+    return sortByPrioridade(filtered)
   }, [tickets, search, statusFilter, prioridadeFilter, getClienteNome])
 
   return (

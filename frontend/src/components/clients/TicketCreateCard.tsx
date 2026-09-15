@@ -18,7 +18,7 @@ type TicketCreateCardProps = {
     titulo: string
     descricao: string
     prioridade: TicketPrioridade
-  }) => void
+  }) => void | Promise<unknown>
 }
 
 export function TicketCreateCard({ clientes, onCreate }: TicketCreateCardProps) {
@@ -28,10 +28,10 @@ export function TicketCreateCard({ clientes, onCreate }: TicketCreateCardProps) 
   const [descricao, setDescricao] = useState('')
   const [prioridade, setPrioridade] = useState<TicketPrioridade>('media')
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!clienteId || !titulo.trim() || !descricao.trim()) return
-    onCreate({
+    await onCreate({
       cliente_id: clienteId,
       titulo: titulo.trim(),
       descricao: descricao.trim(),

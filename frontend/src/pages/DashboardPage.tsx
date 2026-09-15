@@ -8,7 +8,7 @@ import { VolumeChart } from '@/components/dashboard/VolumeChart'
 import { RecentEventsCard } from '@/components/dashboard/RecentEventsCard'
 import { staggerContainer, staggerItem } from '@/components/motion/PageTransition'
 import { Button } from '@/components/ui/button'
-import { slaPercent, volumeSemanal } from '@/lib/mocks/dashboard'
+import { volumeSemanal } from '@/lib/mocks/dashboard'
 import { useAppData } from '@/lib/store/AppDataContext'
 import { computeDashboardMetrics } from '@/lib/utils/dashboard-metrics'
 import { greeting } from '@/lib/utils/time'
@@ -37,7 +37,7 @@ export function DashboardPage() {
       <motion.div variants={staggerItem} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Chamados abertos" value={stats.abertos.value} delta={stats.abertos.delta} trend={stats.abertos.trend} />
         <StatCard label="Em atendimento" value={stats.emAtendimento.value} delta={stats.emAtendimento.delta} trend={stats.emAtendimento.trend} />
-        <StatCard label="SLA médio" value={stats.slaMedio.value} delta={stats.slaMedio.delta} trend={stats.slaMedio.trend} />
+        <StatCard label="SLA" value={stats.slaMedio.value} delta={stats.slaMedio.delta} trend={stats.slaMedio.trend} />
         <StatCard label="Resolvidos hoje" value={stats.resolvidosHoje.value} delta={stats.resolvidosHoje.delta} trend={stats.resolvidosHoje.trend} />
       </motion.div>
 
@@ -46,7 +46,7 @@ export function DashboardPage() {
           <VolumeChart data={volumeSemanal} />
         </div>
         <div className="lg:col-span-1">
-          <SlaRing percent={slaPercent} />
+          <SlaRing percent={stats.slaPercent} subtitle={stats.slaSubtitle} />
         </div>
         <div className="lg:col-span-1">
           <RecentEventsCard eventos={eventos} />

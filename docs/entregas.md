@@ -116,17 +116,19 @@ git checkout stage/03-frontend
 - [x] Central de chamados (tabela desktop + cards mobile, filtros locais)
 - [x] Detalhe do chamado com timeline, registro do cliente e remoção
 - [x] Layout responsivo (MobileNav, sidebar colapsável, TopBar com notificações)
-- [x] Métricas do dashboard derivadas dos tickets mock
+- [x] Métricas do dashboard derivadas dos tickets reais (API)
 - [x] Badge contador na Fila (sidebar + mobile nav)
 - [x] Links eventos → chamado no log de webhooks
-- [x] Base de clientes + abrir chamado (fluxo agente, mock em memória)
-- [x] Eventos — log simulado de webhooks n8n (status/interação)
+- [x] Base de clientes + abrir chamado (fluxo agente via API)
+- [x] Eventos — log local derivado das mutações API (status/interação)
 - [x] Motion: Framer Motion (páginas, sidebar, timeline, kanban)
 - [x] Tema claro/escuro (`ThemeProvider`, toggle na sidebar)
-- [x] Tipos, logger e stub de API para integração futura
+- [x] Camada `lib/api` consumindo os 10 workflows n8n (incl. `GET /clientes`)
+- [x] Bootstrap tickets (5 requests por status) + ordenação por prioridade no client-side
+- [x] Proxy Vite `/webhook` para desenvolvimento local
 - [x] Documentação atualizada (README, architecture, installation, entregas)
 - [x] Merge em `main`
-- [ ] Integração com API n8n real (pendente — não bloqueia entrega da Etapa 3)
+- [x] Integração com API n8n real (`AppDataContext`, loading/erro, refresh)
 
 > **Fora de escopo:** portal self-service do cliente — o produto é console do agente Bold.
 

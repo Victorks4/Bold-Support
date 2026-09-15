@@ -22,6 +22,7 @@ Na instância hospedada, a URL de produção inclui o `webhookId` de cada workfl
 | `POST_Ticket_Interacao.json` | `/webhook/bold-post-ticket-interacao/tickets/adicionar-interacao/:id` |
 | `DELETE_Ticket_por_ID.json` | `/webhook/bold-delete-ticket/tickets/remover/:id` |
 | `DELETE_Cliente_por_ID.json` | `/webhook/bold-delete-cliente/clientes/remover/:id` |
+| `GET_Clientes.json` | `/webhook/bold-get-clientes/clientes` |
 
 > Paths únicos são obrigatórios no n8n — rotas da Etapa 2 usam prefixos (`remover`, `atualizar-status`, `adicionar-interacao`) para não conflitar com GET da Etapa 1.
 
@@ -85,6 +86,31 @@ Cadastra um novo cliente.
 | `NOME_INVALIDO` | Nome ausente ou > 150 chars |
 | `EMAIL_INVALIDO` | E-mail inválido |
 | `TELEFONE_OBRIGATORIO` | Telefone ausente |
+
+---
+
+### GET /clientes
+
+**Workflow:** `GET_Clientes.json`
+
+Lista todos os clientes cadastrados, ordenados por `criado_em` DESC.
+
+**200 — Sucesso:**
+
+```json
+{
+  "total": 2,
+  "clientes": [
+    {
+      "id": "uuid",
+      "nome": "Maria Silva",
+      "email": "maria@email.com",
+      "telefone": "11999998888",
+      "criado_em": "2026-09-10T12:00:00.000Z"
+    }
+  ]
+}
+```
 
 ---
 

@@ -15,9 +15,8 @@ export function EventsPage() {
           title="Eventos do sistema"
         />
         <p className="text-app-muted mb-6 text-sm">
-          Registro simulado dos webhooks HTTP que o n8n dispara para sistemas externos quando um chamado
-          é atualizado. Na produção, estes eventos saem automaticamente do backend — não são configurados
-          pelo agente.
+          Registro local das ações que disparam webhooks HTTP no n8n (status, interação, exclusão). Na
+          produção, o backend envia esses eventos automaticamente para sistemas externos.
         </p>
       </motion.div>
       <motion.div variants={staggerItem}>

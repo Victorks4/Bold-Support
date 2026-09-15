@@ -7,7 +7,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import type { Cliente } from '@/lib/types/cliente'
 
 type ClientRegisterCardProps = {
-  onAdd: (input: { nome: string; email: string; telefone: string }) => Cliente
+  onAdd: (input: { nome: string; email: string; telefone: string }) => void | Promise<unknown>
   recentClientes: Cliente[]
   countTickets: (id: string) => number
   getInitials: (nome: string) => string
@@ -25,10 +25,10 @@ export function ClientRegisterCard({
   const [email, setEmail] = useState('')
   const [telefone, setTelefone] = useState('')
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!nome.trim() || !email.trim() || !telefone.trim()) return
-    onAdd({ nome: nome.trim(), email: email.trim(), telefone: telefone.trim() })
+    await onAdd({ nome: nome.trim(), email: email.trim(), telefone: telefone.trim() })
     setNome('')
     setEmail('')
     setTelefone('')

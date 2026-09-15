@@ -1,9 +1,15 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
-export function SlaRing({ percent }: { percent: number }) {
+type SlaRingProps = {
+  percent: number
+  subtitle?: string
+}
+
+export function SlaRing({ percent, subtitle }: SlaRingProps) {
   const r = 40
   const c = 2 * Math.PI * r
   const offset = c - (percent / 100) * c
+  const healthy = percent >= 70
 
   return (
     <Card className="h-full">
@@ -30,10 +36,12 @@ export function SlaRing({ percent }: { percent: number }) {
             {percent}%
           </span>
         </div>
-        <p className="mt-3 text-center text-xs font-semibold text-emerald-600 dark:text-emerald-400">SLA saudável</p>
-        <p className="text-app-muted mt-1 text-center text-xs">
-          21 de 24 chamados dentro do prazo acordado.
+        <p
+          className={`mt-3 text-center text-xs font-semibold ${healthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-app-muted'}`}
+        >
+          {healthy ? 'SLA saudável' : 'Acompanhar prazos'}
         </p>
+        {subtitle && <p className="text-app-muted mt-1 text-center text-xs">{subtitle}</p>}
       </CardContent>
     </Card>
   )

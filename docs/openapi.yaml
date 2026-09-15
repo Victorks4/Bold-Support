@@ -31,6 +31,26 @@ paths:
         '400':
           $ref: '#/components/responses/ErroValidacao'
 
+  /clientes:
+    get:
+      summary: Listar clientes
+      tags: [Clientes]
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [total, clientes]
+                properties:
+                  total:
+                    type: integer
+                  clientes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Cliente'
+
   /clientes/{id}:
     get:
       summary: Consultar cliente por ID
