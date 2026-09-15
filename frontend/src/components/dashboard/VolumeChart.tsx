@@ -13,8 +13,8 @@ export function VolumeChart({ data }: { data: Bar[] }) {
       </CardHeader>
       <CardContent>
         <div className="flex h-32 items-end justify-between gap-2">
-          {data.map((bar) => (
-            <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
+          {data.map((bar, index) => (
+            <div key={`${bar.label}-${index}`} className="flex flex-1 flex-col items-center gap-2">
               <div
                 className="w-full rounded-t-md bg-blue-100 transition-all dark:bg-blue-900/40"
                 style={{ height: `${(bar.value / max) * 100}%`, minHeight: 4 }}

@@ -51,7 +51,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Cliente'
 
-  /clientes/{id}:
+  /clientes/id/{id}:
     get:
       summary: Consultar cliente por ID
       tags: [Clientes]
@@ -89,7 +89,7 @@ paths:
         '409':
           $ref: '#/components/responses/Conflito'
 
-  /tickets:
+  /tickets/listar:
     get:
       summary: Listar tickets com filtro
       tags: [Tickets]
@@ -113,6 +113,8 @@ paths:
                 $ref: '#/components/schemas/TicketListagem'
         '400':
           $ref: '#/components/responses/ErroValidacao'
+
+  /tickets:
     post:
       summary: Criar ticket
       tags: [Tickets]
@@ -134,7 +136,7 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
-  /tickets/{id}:
+  /tickets/id/{id}:
     get:
       summary: Consultar ticket com histórico de interações
       tags: [Tickets]

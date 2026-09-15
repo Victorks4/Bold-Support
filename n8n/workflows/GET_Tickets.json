@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "GET",
-        "path": "tickets",
+        "path": "tickets/listar",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -49,7 +49,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const { status, prioridade } = $input.first().json;\n\nconst conditions = [];\nconst params = [];\n\nif (status) {\n  params.push(status);\n  conditions.push(`status = $${params.length}`);\n}\n\nif (prioridade) {\n  params.push(prioridade);\n  conditions.push(`prioridade = $${params.length}`);\n}\n\nconst query = `\n  SELECT id, protocolo, cliente_id, titulo, descricao, prioridade, status, criado_em, atualizado_em\n  FROM tickets\n  WHERE ${conditions.join(' AND ')}\n  ORDER BY criado_em DESC\n`;\n\nreturn [{ json: {\n  query,\n  queryParams: params.join(','),\n  filtros: { status, prioridade }\n} }];"
+        "jsCode": "const { status, prioridade } = $input.first().json;\nconst filtros = { status, prioridade };\n\nconst base = 'SELECT id, protocolo, cliente_id, titulo, descricao, prioridade, status, criado_em, atualizado_em FROM tickets';\n\nlet query;\nif (status && prioridade) {\n  query = `${base} WHERE status = '${status}' AND prioridade = '${prioridade}' ORDER BY criado_em DESC`;\n} else if (status) {\n  query = `${base} WHERE status = '${status}' ORDER BY criado_em DESC`;\n} else {\n  query = `${base} WHERE prioridade = '${prioridade}' ORDER BY criado_em DESC`;\n}\n\nreturn [{ json: { query, filtros } }];"
       },
       "id": "code-montar-query",
       "name": "Montar_query",
@@ -61,9 +61,7 @@
       "parameters": {
         "operation": "executeQuery",
         "query": "={{ $json.query }}",
-        "options": {
-          "queryReplacement": "={{ $json.queryParams }}"
-        }
+        "options": {}
       },
       "id": "postgres-listar-tickets",
       "name": "Listar_tickets",

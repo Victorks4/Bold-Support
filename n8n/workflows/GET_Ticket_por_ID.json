@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "GET",
-        "path": "tickets/:id",
+        "path": "tickets/id/:id",
         "responseMode": "responseNode",
         "options": {}
       },

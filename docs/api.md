@@ -14,15 +14,18 @@ https://dev.boldsolution.com.br/webhook
 https://dev.boldsolution.com.br/webhook-test
 ```
 
-Na instância hospedada, a URL de produção inclui o `webhookId` de cada workflow:
+Na instância hospedada, a URL de produção usa o **path** do node `Webhook_1` (sem `webhookId` no meio):
 
 | Workflow | URL de produção |
 |----------|-----------------|
-| `PATCH_Ticket_Status.json` | `/webhook/bold-patch-ticket-status/tickets/atualizar-status/:id` |
-| `POST_Ticket_Interacao.json` | `/webhook/bold-post-ticket-interacao/tickets/adicionar-interacao/:id` |
-| `DELETE_Ticket_por_ID.json` | `/webhook/bold-delete-ticket/tickets/remover/:id` |
-| `DELETE_Cliente_por_ID.json` | `/webhook/bold-delete-cliente/clientes/remover/:id` |
-| `GET_Clientes.json` | `/webhook/bold-get-clientes/clientes` |
+| `GET_Clientes.json` | `/webhook/clientes` |
+| `GET_Cliente_por_ID.json` | `/webhook/clientes/id/:id` |
+| `GET_Tickets.json` | `/webhook/tickets/listar` |
+| `GET_Ticket_por_ID.json` | `/webhook/tickets/id/:id` |
+| `PATCH_Ticket_Status.json` | `/webhook/tickets/atualizar-status/:id` |
+| `POST_Ticket_Interacao.json` | `/webhook/tickets/adicionar-interacao/:id` |
+| `DELETE_Ticket_por_ID.json` | `/webhook/tickets/remover/:id` |
+| `DELETE_Cliente_por_ID.json` | `/webhook/clientes/remover/:id` |
 
 > Paths únicos são obrigatórios no n8n — rotas da Etapa 2 usam prefixos (`remover`, `atualizar-status`, `adicionar-interacao`) para não conflitar com GET da Etapa 1.
 
@@ -114,13 +117,15 @@ Lista todos os clientes cadastrados, ordenados por `criado_em` DESC.
 
 ---
 
-### GET /clientes/:id
+### GET /clientes/id/:id
 
 **Workflow:** `GET_Cliente_por_ID.json`
 
 Retorna dados de um cliente pelo UUID.
 
-**Exemplo:** `GET /clientes/18695f4c-43be-4646-83dd-98c55ca9c90f`
+> Path `clientes/id/:id` evita conflito com `GET /clientes` (listagem) no n8n.
+
+**Exemplo:** `GET /clientes/id/18695f4c-43be-4646-83dd-98c55ca9c90f`
 
 **200 — Sucesso:** objeto `Cliente` (mesmos campos do POST).
 
@@ -199,18 +204,20 @@ Cria ticket vinculado a um cliente. Gera protocolo `TKT-YYYYMMDD-XXXX`, status `
 
 ---
 
-### GET /tickets
+### GET /tickets/listar
 
 **Workflow:** `GET_Tickets.json`
 
 Lista tickets com **ao menos um** filtro na query string.
 
+> Path `tickets/listar` evita conflito com `POST /tickets` no n8n.
+
 **Exemplos:**
 
 ```
-GET /tickets?status=aberto
-GET /tickets?prioridade=alta
-GET /tickets?status=aberto&prioridade=alta
+GET /tickets/listar?status=aberto
+GET /tickets/listar?prioridade=alta
+GET /tickets/listar?status=aberto&prioridade=alta
 ```
 
 | Query | Valores |
@@ -250,11 +257,15 @@ GET /tickets?status=aberto&prioridade=alta
 
 ---
 
-### GET /tickets/:id
+### GET /tickets/id/:id
 
 **Workflow:** `GET_Ticket_por_ID.json`
 
 Retorna ticket com array `interacoes` ordenado por `criado_em` ASC.
+
+> Path `tickets/id/:id` evita conflito com `POST /tickets` e `GET /tickets/listar` no n8n.
+
+**Exemplo:** `GET /tickets/id/92845250-3a28-4821-9df1-8f3fdca47377`
 
 **200 — Sucesso:**
 

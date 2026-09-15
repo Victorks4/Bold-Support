@@ -27,17 +27,25 @@ export function TicketCreateCard({ clientes, onCreate }: TicketCreateCardProps) 
   const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
   const [prioridade, setPrioridade] = useState<TicketPrioridade>('media')
+  const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!clienteId || !titulo.trim() || !descricao.trim()) return
-    await onCreate({
-      cliente_id: clienteId,
-      titulo: titulo.trim(),
-      descricao: descricao.trim(),
-      prioridade,
-    })
-    navigate('/chamados')
+    if (!clienteId || !titulo.trim() || !descricao.trim() || submitting) return
+    setSubmitting(true)
+    try {
+      await onCreate({
+        cliente_id: clienteId,
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        prioridade,
+      })
+      navigate('/chamados')
+    } catch {
+      // erro exibido no banner global (actionError)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -101,10 +109,10 @@ export function TicketCreateCard({ clientes, onCreate }: TicketCreateCardProps) 
           </FieldGroup>
           <Button
             type="submit"
-            disabled={!clienteId || !titulo.trim() || !descricao.trim()}
+            disabled={!clienteId || !titulo.trim() || !descricao.trim() || submitting}
             className="mt-4 h-11 w-full rounded-xl bg-[#00E676] font-semibold text-app-heading hover:bg-[#00cc66] disabled:opacity-50"
           >
-            Criar chamado
+            {submitting ? 'Criando...' : 'Criar chamado'}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </form>

@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "GET",
-        "path": "clientes/:id",
+        "path": "clientes/id/:id",
         "responseMode": "responseNode",
         "options": {}
       },

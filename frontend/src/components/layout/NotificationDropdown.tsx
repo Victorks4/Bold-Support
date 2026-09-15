@@ -38,7 +38,7 @@ export function NotificationDropdown() {
         <div className="absolute top-full right-0 z-50 mt-2 w-[min(100vw-2rem,320px)] rounded-2xl border border-gray-100 bg-white py-2 shadow-xl dark:border-gray-800 dark:bg-[#161B26]">
           <div className="border-b border-gray-100 px-4 py-2 dark:border-gray-800">
             <p className="text-sm font-bold text-[#0E121D] dark:text-gray-100">Notificações</p>
-            <p className="text-xs text-gray-500">Eventos do sistema (webhook simulado)</p>
+            <p className="text-xs text-gray-500">Payload webhook.site (protocolo · evento · status)</p>
           </div>
           {recent.length === 0 ? (
             <p className="px-4 py-6 text-center text-xs text-gray-400">Nenhum evento recente</p>

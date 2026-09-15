@@ -15,8 +15,9 @@ export function EventsPage() {
           title="Eventos do sistema"
         />
         <p className="text-app-muted mb-6 text-sm">
-          Registro local das ações que disparam webhooks HTTP no n8n (status, interação, exclusão). Na
-          produção, o backend envia esses eventos automaticamente para sistemas externos.
+          Mesmo payload enviado pelo n8n ao webhook.site: protocolo, evento e status. Eventos locais
+          aparecem ao usar o app; com <code className="text-xs">VITE_WEBHOOK_SITE_TOKEN</code> no{' '}
+          <code className="text-xs">.env</code>, também sincroniza o que chegar no webhook.site.
         </p>
       </motion.div>
       <motion.div variants={staggerItem}>

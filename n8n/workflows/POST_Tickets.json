@@ -88,31 +88,51 @@
     },
     {
       "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst esc = (v) => String(v).replace(/'/g, \"''\");\n\nconst query = `\nINSERT INTO tickets (protocolo, cliente_id, titulo, descricao, prioridade, status)\nVALUES ('${esc(d.protocolo)}', '${d.cliente_id}'::uuid, '${esc(d.titulo)}', '${esc(d.descricao)}', '${esc(d.prioridade)}', '${esc(d.status)}')\nRETURNING id, protocolo, cliente_id, titulo, descricao, prioridade, status, criado_em, atualizado_em\n`;\n\nreturn [{ json: { query } }];"
+      },
+      "id": "code-montar-insert",
+      "name": "Montar_insert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 100]
+    },
+    {
+      "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO tickets (protocolo, cliente_id, titulo, descricao, prioridade, status) VALUES ($1, $2::uuid, $3, $4, $5, $6) RETURNING *;",
-        "options": {
-          "queryReplacement": "={{ $json.protocolo }},{{ $json.cliente_id }},{{ $json.titulo }},{{ $json.descricao }},{{ $json.prioridade }},{{ $json.status }}"
-        }
+        "query": "={{ $json.query }}",
+        "options": {}
       },
       "id": "postgres-inserir-ticket",
       "name": "Inserir_ticket",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [1320, 100]
+      "position": [1540, 100],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const ticket = $('Inserir_ticket').first().json;\nif (!ticket?.id) {\n  throw new Error('Falha ao inserir ticket');\n}\nreturn [{ json: { ticket_id: ticket.id } }];"
+      },
+      "id": "code-preparar-interacao",
+      "name": "Preparar_interacao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 100]
     },
     {
       "parameters": {
         "operation": "executeQuery",
         "query": "INSERT INTO interacoes (ticket_id, tipo, mensagem) VALUES ($1::uuid, 'sistema', 'Ticket aberto automaticamente pelo sistema.');",
         "options": {
-          "queryReplacement": "={{ $json.id }}"
+          "queryReplacement": "={{ $json.ticket_id }}"
         }
       },
       "id": "postgres-interacao-sistema",
       "name": "Interacao_sistema",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [1540, 100]
+      "position": [1980, 100],
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -124,7 +144,7 @@
       "name": "Responde_201",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1760, 100]
+      "position": [2200, 100]
     },
     {
       "parameters": {
@@ -164,11 +184,13 @@
     "Cliente_existe?": { "main": [[{ "node": "Cliente_ok?", "type": "main", "index": 0 }]] },
     "Cliente_ok?": {
       "main": [
-        [{ "node": "Inserir_ticket", "type": "main", "index": 0 }],
+        [{ "node": "Montar_insert", "type": "main", "index": 0 }],
         [{ "node": "Responde_404", "type": "main", "index": 0 }]
       ]
     },
-    "Inserir_ticket": { "main": [[{ "node": "Interacao_sistema", "type": "main", "index": 0 }]] },
+    "Montar_insert": { "main": [[{ "node": "Inserir_ticket", "type": "main", "index": 0 }]] },
+    "Inserir_ticket": { "main": [[{ "node": "Preparar_interacao", "type": "main", "index": 0 }]] },
+    "Preparar_interacao": { "main": [[{ "node": "Interacao_sistema", "type": "main", "index": 0 }]] },
     "Interacao_sistema": { "main": [[{ "node": "Responde_201", "type": "main", "index": 0 }]] }
   },
   "active": false,
