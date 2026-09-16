@@ -1,20 +1,20 @@
-# Entregas por etapa — Bold Support
+# Entregas por etapa - Bold Support
 
 Este documento descreve a divisão de branches no GitHub conforme solicitado no desafio técnico Bold Solution.
 
 ## Convenção de nomenclatura
 
-Padrão: `stage/<número>-<descrição>` — prefixo `stage/` agrupa entregas, número com zero à esquerda garante ordenação, nome em kebab-case descreve o escopo.
+Padrão: `stage/<número>-<descrição>` - prefixo `stage/` agrupa entregas, número com zero à esquerda garante ordenação, nome em kebab-case descreve o escopo.
 
 ## Estratégia de branches
 
 | Branch | Etapa | Conteúdo | Status |
 |--------|-------|----------|--------|
-| `main` | — | Última etapa estável entregue | Etapas 1, 2 e 3 |
-| `stage/01-core-api` | 1 | Snapshot congelado — CRUD básico (5 rotas) | Concluída |
+| `main` | - | Última etapa estável entregue | Etapas 1, 2, 3 e 4 |
+| `stage/01-core-api` | 1 | Snapshot congelado - CRUD básico (5 rotas) | Concluída |
 | `stage/02-ticket-operations` | 2 | DELETE, PATCH status, interações, webhook externo | Concluída |
-| `stage/03-frontend` | 3 | Frontend React — console do agente | Concluída |
-| `stage/04-authentication` | 4 | Autenticação JWT/OAuth | Pendente |
+| `stage/03-frontend` | 3 | Frontend React - console do agente | Concluída |
+| `stage/04-authentication` | 4 | Autenticação JWT por agente | Concluída |
 
 ### Fluxo de trabalho
 
@@ -53,7 +53,7 @@ git checkout stage/01-core-api
 git checkout stage/03-frontend
 ```
 
-## Etapa 1 — Concluída
+## Etapa 1 - Concluída
 
 **Branch:** `stage/01-core-api`
 
@@ -65,7 +65,7 @@ git checkout stage/03-frontend
 | GET | `/tickets` | `GET_Tickets.json` |
 | GET | `/tickets/:id` | `GET_Ticket_por_ID.json` |
 
-## Etapa 2 — Concluída
+## Etapa 2 - Concluída
 
 **Branch:** `stage/02-ticket-operations`
 
@@ -75,7 +75,7 @@ git checkout stage/03-frontend
 | DELETE | `/tickets/remover/:id` | `DELETE_Ticket_por_ID.json` | Concluído |
 | PATCH | `/tickets/atualizar-status/:id` | `PATCH_Ticket_Status.json` | Concluído |
 | POST | `/tickets/adicionar-interacao/:id` | `POST_Ticket_Interacao.json` | Concluído |
-| — | Webhook HTTP externo | Nodes em PATCH/DELETE/POST | Concluído |
+| - | Webhook HTTP externo | Nodes em PATCH/DELETE/POST | Concluído |
 
 ### Checklist Etapa 2
 
@@ -88,7 +88,7 @@ git checkout stage/03-frontend
 - [x] Atualizar `docs/api.md`, `docs/openapi.yaml` e `README.md`
 - [x] Testar com Postman (produção `/webhook`, workflows ativos)
 
-## Etapa 3 — Concluída
+## Etapa 3 - Concluída
 
 **Branch:** `stage/03-frontend`
 
@@ -96,21 +96,21 @@ git checkout stage/03-frontend
 
 | Rota | Tela |
 |------|------|
-| `/` | Login (mock) |
+| `/` | Login (JWT - agente Bold) |
 | `/dashboard` | Visão geral do atendimento |
-| `/fila` | Kanban — 4 colunas |
+| `/fila` | Kanban - 4 colunas |
 | `/chamados` | Lista com filtros |
 | `/chamados/:id` | Detalhe + timeline |
 | `/clientes` | Cadastro + abrir chamado |
-| `/eventos` | Log simulado de webhooks |
+| `/eventos` | Log de eventos (API + webhook.site opcional) |
 
 ### Checklist Etapa 3
 
 - [x] Projeto React + Vite + Tailwind em `frontend/`
 - [x] Tela de login split-screen (estilo Pointfy)
 - [x] Painel esquerdo com `<video>` (`public/videos/boldsupport.mp4`)
-- [x] Formulário email/senha (UI estática — auth na Etapa 4)
-- [x] Shell do app (sidebar, topbar) — identidade Bold Support
+- [x] Formulário email/senha (UI estática - auth na Etapa 4)
+- [x] Shell do app (sidebar, topbar) - identidade Bold Support
 - [x] Dashboard agente (métricas derivadas, últimos eventos, chamados recentes)
 - [x] Fila kanban (4 colunas incl. Encerrados, drag-and-drop, ação rápida de status)
 - [x] Central de chamados (tabela desktop + cards mobile, filtros locais)
@@ -120,7 +120,10 @@ git checkout stage/03-frontend
 - [x] Badge contador na Fila (sidebar + mobile nav)
 - [x] Links eventos → chamado no log de webhooks
 - [x] Base de clientes + abrir chamado (fluxo agente via API)
-- [x] Eventos — log local derivado das mutações API (status/interação)
+- [x] Eventos - log local derivado das mutações API + polling webhook.site opcional
+- [x] URLs n8n alinhadas (path simples + webhookId por rota na instância Bold)
+- [x] Workflows POST/PATCH corrigidos (SQL via Code nodes)
+- [x] Postman Etapa 1 e 2 + environment de produção
 - [x] Motion: Framer Motion (páginas, sidebar, timeline, kanban)
 - [x] Tema claro/escuro (`ThemeProvider`, toggle na sidebar)
 - [x] Camada `lib/api` consumindo os 10 workflows n8n (incl. `GET /clientes`)
@@ -130,8 +133,25 @@ git checkout stage/03-frontend
 - [x] Merge em `main`
 - [x] Integração com API n8n real (`AppDataContext`, loading/erro, refresh)
 
-> **Fora de escopo:** portal self-service do cliente — o produto é console do agente Bold.
+> **Fora de escopo:** portal self-service do cliente - o produto é console do agente Bold.
 
-## Etapa 4 — Pendente
+## Etapa 4 - Concluída
 
-**Branch:** `stage/04-authentication` — Autenticação entre frontend e backend.
+**Branch:** `stage/04-authentication`
+
+| Método | Rota | Workflow | Auth |
+|--------|------|----------|------|
+| POST | `/auth/login` | `POST_Auth_Login.json` | Pública |
+| * | Demais rotas | Workflows existentes | Bearer JWT |
+
+### Checklist Etapa 4
+
+- [x] Migration `002_agentes.sql` + seed agente teste
+- [x] Workflow `POST_Auth_Login.json` (validação `crypt()` no Postgres)
+- [x] Snippet `n8n/snippets/jwt-pure-inline.js` (HMAC-SHA256 em JS puro)
+- [x] Proteção JWT nos 10 workflows (Extrair_token → Validar_JWT → 401)
+- [x] `AuthContext`, `token-storage`, rotas protegidas no React
+- [x] Login real + logout + TopBar com agente logado
+- [x] `apiFetch` com Bearer + handler `401 TOKEN_INVALIDO`
+- [x] Docs (`api.md`, `openapi.yaml`, `installation.md`, `database.md`)
+- [x] Postman Etapa 4 + `access_token` no environment

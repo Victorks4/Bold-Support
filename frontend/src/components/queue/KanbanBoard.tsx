@@ -19,7 +19,7 @@ const TICKET_DRAG_TYPE = 'application/x-bold-ticket-id'
 type KanbanBoardProps = {
   tickets: Ticket[]
   getClienteNome: (id: string) => string
-  onStatusChange?: (ticketId: string, status: TicketStatus) => void
+  onStatusChange?: (ticketId: string, status: TicketStatus) => void | Promise<void>
 }
 
 function getColumnTickets(tickets: Ticket[], column: KanbanColumnKey): Ticket[] {
@@ -53,7 +53,7 @@ export function KanbanBoard({ tickets, getClienteNome, onStatusChange }: KanbanB
     setDragOverColumn(column)
   }
 
-  function handleDrop(e: React.DragEvent, column: KanbanColumnKey) {
+  async function handleDrop(e: React.DragEvent, column: KanbanColumnKey) {
     e.preventDefault()
     const ticketId = e.dataTransfer.getData(TICKET_DRAG_TYPE) || draggingId
     if (!ticketId || !onStatusChange) {
@@ -68,7 +68,7 @@ export function KanbanBoard({ tickets, getClienteNome, onStatusChange }: KanbanB
     }
 
     const nextStatus = resolveDropStatus(column, ticket.status)
-    if (nextStatus) onStatusChange(ticketId, nextStatus)
+    if (nextStatus) await onStatusChange(ticketId, nextStatus)
     handleDragEnd()
   }
 

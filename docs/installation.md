@@ -1,4 +1,4 @@
-# Instalação — Bold Support
+# Instalação - Bold Support
 
 Guia para configurar o ambiente após clonar o repositório.
 
@@ -37,26 +37,41 @@ cp .env.example .env
 
 ## 4. Banco de dados
 
-### Opção A — Supabase SQL Editor
+### Opção A - Supabase SQL Editor
 
 1. Crie um projeto no Supabase.
 2. Abra **SQL Editor**.
-3. Cole o conteúdo de `database/migrations/001_initial_schema.sql`.
-4. Execute.
+3. Cole o conteúdo de `database/migrations/001_initial_schema.sql` e execute.
+4. Cole o conteúdo de `database/migrations/002_agentes.sql` e execute.
+5. Cole o conteúdo de `database/migrations/003_app_config.sql` e execute.
 
-### Opção B — psql
+### Opção B - psql
 
 ```bash
 psql "$DATABASE_URL" -f database/migrations/001_initial_schema.sql
+psql "$DATABASE_URL" -f database/migrations/002_agentes.sql
+psql "$DATABASE_URL" -f database/migrations/003_app_config.sql
 ```
 
-Verifique as tabelas: `clientes`, `tickets`, `interacoes`.
+Verifique as tabelas: `clientes`, `tickets`, `interacoes`, `agentes`, `app_config`.
 
-## 5. n8n — importar workflows
+### Agente de teste (desenvolvimento)
+
+A migration `002_agentes.sql` cria um agente para login:
+
+| Campo | Valor |
+|-------|-------|
+| E-mail | `agente@bold.com` |
+| Senha | `Bold@2026` |
+
+> Use apenas em ambiente de desenvolvimento. Não reutilize esta senha em produção.
+
+## 5. n8n - importar workflows
 
 1. Acesse a instância n8n.
 2. **Import from File** para cada JSON em `n8n/workflows/`:
    - `POST_Clientes.json`
+   - `GET_Clientes.json`
    - `GET_Cliente_por_ID.json`
    - `DELETE_Cliente_por_ID.json`
    - `POST_Tickets.json`
@@ -65,7 +80,24 @@ Verifique as tabelas: `clientes`, `tickets`, `interacoes`.
    - `DELETE_Ticket_por_ID.json`
    - `PATCH_Ticket_Status.json`
    - `POST_Ticket_Interacao.json`
-3. Em **cada** node Postgres, vincule a credencial do banco (Session Pooler recomendado no Supabase).
+   - `POST_Auth_Login.json`
+3. Rode a migration `database/migrations/003_app_config.sql` no Supabase e **altere o `jwt_secret`**:
+
+```sql
+UPDATE app_config
+SET valor = 'sua-chave-longa-e-aleatoria-aqui'
+WHERE chave = 'jwt_secret';
+```
+
+| Chave em `app_config` | Descrição |
+|-----------------------|-----------|
+| `jwt_secret` | Chave HS256 para assinar/validar tokens (obrigatório) |
+| `jwt_expires_in` | Expiração em segundos (default `3600`) |
+
+> Funciona no plano gratuito do n8n - o segredo fica no Postgres, não em Variables nem no servidor.
+> Os nodes JWT usam **HMAC-SHA256 em JavaScript puro** (sem `require('crypto')` nem `crypto.subtle`) - compatível com instâncias hospedadas restritas.
+
+4. Em **cada** node Postgres (incluindo `Buscar_jwt_secret`), vincule a credencial do banco (Session Pooler recomendado no Supabase).
 4. Nos nodes Postgres de **busca** (`Buscar_cliente`, `Buscar_ticket`, `Verificar_cliente`, `Listar_tickets`, `Buscar_interacoes`): ative **Always Output Data** nas configurações do node.
 
 ### Credencial Postgres (Supabase)
@@ -96,12 +128,19 @@ https://dev.boldsolution.com.br/webhook-test/<rota>
 
 ### Postman (produção)
 
-1. Importe `postman/Bold-Support.postman_collection.json` e `postman/Bold-Support.postman_environment.json`.
-2. Ative o environment **Bold Support — Produção**.
-3. Preencha `cliente_id` e `ticket_id` (crie via workflows da Etapa 1 se necessário).
-4. **Etapa 2** — ordem sugerida: PATCH status → POST interação → DELETE ticket → DELETE cliente (sem tickets).
+1. Importe:
+   - `postman/Bold-Support-Etapa-4.postman_collection.json` (login JWT)
+   - `postman/Bold-Support-Etapa-1.postman_collection.json` (rotas básicas)
+   - `postman/Bold-Support-Etapa-2.postman_collection.json` (DELETE, PATCH, interações)
+   - `postman/Bold-Support.postman_environment.json`
+2. Ative o environment **Bold Support - Produção** (`base_url` = `https://dev.boldsolution.com.br/webhook`).
+3. Execute **POST - Login agente** (Etapa 4) - o script preenche `access_token` automaticamente.
+4. Preencha `cliente_id` e `ticket_id` com UUIDs válidos.
+5. Ordem sugerida Etapa 2: PATCH status → POST interação → DELETE ticket → DELETE cliente (sem tickets).
 
-> URLs da collection usam o formato da instância Bold: `/webhook/{webhookId}/{path}`. Copie a Production URL do node `Webhook_1` no n8n para validar.
+> Todas as rotas (exceto login) exigem `Authorization: Bearer {{access_token}}`. As collections Etapa 1 e 2 já incluem esse header.
+
+> Na instância Bold, algumas rotas usam só o path (`/webhook/clientes`) e outras incluem `webhookId` (`/webhook/bold-get-ticket-id/tickets/id/:id`). Tabela completa em `docs/api.md`.
 
 ### Webhook externo (Etapa 2)
 
@@ -111,7 +150,7 @@ https://dev.boldsolution.com.br/webhook-test/<rota>
 
 ## 7. Produção
 
-Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo** na instância n8n. Na instância Bold, a URL de produção inclui o `webhookId` de cada workflow (ver `docs/api.md`).
+Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo** na instância n8n. Copie a **Production URL** de cada node `Webhook_1` - o formato pode variar (path simples ou com `webhookId` no meio). Ver `docs/api.md`.
 
 ## 8. Solução de problemas
 
@@ -125,7 +164,7 @@ Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo*
 
 ## 9. Frontend (Etapa 3)
 
-O console do agente está em `frontend/`. Dados mock em memória — não requer banco nem n8n para rodar localmente.
+O console do agente está em `frontend/` e consome a API n8n em produção via proxy Vite.
 
 ```bash
 cd frontend
@@ -138,9 +177,10 @@ npm run dev       # http://localhost:5173
 
 | Variável | Descrição |
 |----------|-----------|
-| `VITE_N8N_WEBHOOK_BASE_URL` | Base URL dos webhooks n8n (integração futura) |
+| `VITE_N8N_WEBHOOK_BASE_URL` | Base dos webhooks (`/webhook` - proxy para `dev.boldsolution.com.br`) |
+| `VITE_WEBHOOK_SITE_TOKEN` | (Opcional) UUID do webhook.site para sincronizar eventos em `/eventos` |
 
-Os IDs dos workflows (`VITE_WEBHOOK_ID_*`) estão comentados em `frontend/.env.example` — ativar quando conectar a API real.
+Os `webhookId` por rota estão mapeados em `frontend/src/lib/api/client.ts` conforme a instância Bold.
 
 ### Scripts disponíveis
 
@@ -153,14 +193,22 @@ Os IDs dos workflows (`VITE_WEBHOOK_ID_*`) estão comentados em `frontend/.env.e
 
 ### Fluxo de teste do frontend
 
-1. Acesse `http://localhost:5173`
-2. Na tela de login, clique em **Entrar** (auth mock — qualquer credencial)
-3. Navegue pelo dashboard, fila kanban, chamados, clientes e eventos
-4. Cadastre um cliente em `/clientes` e abra um chamado
-5. Mova cards no kanban em `/fila` e verifique eventos simulados em `/eventos`
+1. Garanta workflows **ativos** no n8n (produção `/webhook`)
+2. Acesse `http://localhost:5173`
+3. Faça login com o agente de teste (`agente@bold.com` / `Bold@2026`)
+4. Verifique clientes e tickets carregados (bootstrap via API)
+5. Cadastre cliente e abra chamado em `/clientes`
+6. Mova cards no kanban em `/fila` e altere status no detalhe do chamado
+7. Confira eventos em `/eventos` (mutações locais + webhook.site se configurado)
 
 Documentação detalhada: [`frontend/README.md`](../frontend/README.md)
 
-## 10. Próximos passos
+## 10. Etapa 4 - Autenticação JWT
 
-Etapas 1–3 concluídas no repositório. Próximo: autenticação (Etapa 4, branch `stage/04-authentication`).
+1. Aplique `002_agentes.sql` no Supabase.
+2. Rode `003_app_config.sql`, atualize `jwt_secret` no Supabase e reimporte todos os workflows (incluindo `POST_Auth_Login.json`).
+3. Ative/publicar workflows protegidos.
+4. Teste no Postman: login → GET clientes com Bearer → GET clientes sem Bearer (401).
+5. No frontend, login real com sessão (`localStorage` se "Lembrar-me", senão `sessionStorage`).
+
+Token expirado durante o uso → API retorna `401 TOKEN_INVALIDO` → logout automático e redirect para `/`.

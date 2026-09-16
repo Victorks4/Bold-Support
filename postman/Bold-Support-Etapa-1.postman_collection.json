@@ -1,0 +1,848 @@
+{
+  "info": {
+    "_postman_id": "a104d65b-563b-403e-90f6-48d08b77c52b",
+    "name": "Bold Support - Etapa 1",
+    "description": "Testes dos 5 workflows n8n (modo webhook-test).\n\nAntes de CADA request: abra o workflow no n8n → Webhook → Listen for test event.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49211461",
+    "_collection_link": "https://go.postman.co/collection/49211461-a104d65b-563b-403e-90f6-48d08b77c52b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01  POST Clientes",
+      "item": [
+        {
+          "name": "Criar cliente (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Retorna id', () => pm.expect(json.id).to.be.a('string'));",
+                  "pm.collectionVariables.set('cliente_id', json.id);",
+                  "pm.environment.set('cliente_id', json.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Victor S\",\n  \"email\": \"victor.teste.{{$timestamp}}@email.com\",\n  \"telefone\": \"11999998888\"\n}"
+            },
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/clientes",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "clientes"
+              ]
+            },
+            "description": "Workflow: POST Clientes\nListen for test event antes de enviar."
+          },
+          "response": []
+        },
+        {
+          "name": "Email inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Codigo EMAIL_INVALIDO', () => pm.expect(pm.response.json().codigo).to.eql('EMAIL_INVALIDO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João\",\n  \"email\": \"email-sem-arroba\",\n  \"telefone\": \"11999998888\"\n}"
+            },
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/clientes",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "clientes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sem telefone (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Codigo TELEFONE_OBRIGATORIO', () => pm.expect(pm.response.json().codigo).to.eql('TELEFONE_OBRIGATORIO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João\",\n  \"email\": \"joao@email.com\"\n}"
+            },
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/clientes",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "clientes"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02  GET Cliente por ID",
+      "item": [
+        {
+          "name": "Buscar cliente (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Tem nome e email', () => {",
+                  "  pm.expect(json.nome).to.be.a('string');",
+                  "  pm.expect(json.email).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-cliente/clientes/id/315720fe-647d-48fd-9e14-efbdd66cab98",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "bold-get-cliente",
+                "clientes",
+                "id",
+                "315720fe-647d-48fd-9e14-efbdd66cab98"
+              ]
+            },
+            "description": "Workflow: GET Cliente por ID\nUse cliente_id do POST ou do Supabase."
+          },
+          "response": []
+        },
+        {
+          "name": "ID inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Codigo ID_INVALIDO', () => pm.expect(pm.response.json().codigo).to.eql('ID_INVALIDO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-cliente/clientes/id/18695f4c-43be-4646-8",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "bold-get-cliente",
+                "clientes",
+                "id",
+                "18695f4c-43be-4646-8"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cliente não existe (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Codigo CLIENTE_NAO_ENCONTRADO', () => pm.expect(pm.response.json().codigo).to.eql('CLIENTE_NAO_ENCONTRADO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-cliente/clientes/id/00000000-0000-4000-8000-000000000000",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "bold-get-cliente",
+                "clientes",
+                "id",
+                "00000000-0000-4000-8000-000000000000"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03  POST Tickets",
+      "item": [
+        {
+          "name": "Criar ticket (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Tem protocolo e status aberto', () => {",
+                  "  pm.expect(json.protocolo).to.match(/^TKT-/);",
+                  "  pm.expect(json.status).to.eql('aberto');",
+                  "});",
+                  "pm.collectionVariables.set('ticket_id', json.id);",
+                  "pm.environment.set('ticket_id', json.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"titulo\": \"Erro no login\",\n  \"descricao\": \"Não consigo acessar o sistema agr\",\n  \"prioridade\": \"alta\"\n}"
+            },
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/tickets/criar",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "tickets",
+                "criar"
+              ]
+            },
+            "description": "Workflow: POST Tickets\nCria ticket + interação sistema no Supabase."
+          },
+          "response": []
+        },
+        {
+          "name": "cliente_id inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Codigo CLIENTE_ID_INVALIDO', () => pm.expect(pm.response.json().codigo).to.eql('CLIENTE_ID_INVALIDO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"abc123\",\n  \"titulo\": \"Teste\",\n  \"descricao\": \"Teste\"\n}"
+            },
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/tickets",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "tickets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sem descrição (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Codigo DESCRICAO_OBRIGATORIA', () => pm.expect(pm.response.json().codigo).to.eql('DESCRICAO_OBRIGATORIA'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"titulo\": \"Teste\",\n  \"descricao\": \"\"\n}"
+            },
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/ticketss",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "ticketss"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cliente não existe (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Codigo CLIENTE_NAO_ENCONTRADO', () => pm.expect(pm.response.json().codigo).to.eql('CLIENTE_NAO_ENCONTRADO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"00000000-0000-4000-8000-000000000000\",\n  \"titulo\": \"Teste\",\n  \"descricao\": \"Cliente fake\"\n}"
+            },
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/ticketss",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "ticketss"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 GET Tickets (lista)",
+      "item": [
+        {
+          "name": "Filtrar por status (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Estrutura total + tickets', () => {",
+                  "  pm.expect(json.total).to.be.a('number');",
+                  "  pm.expect(json.tickets).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar?status=em_atendimento",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "tickets",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "em_atendimento"
+                }
+              ]
+            },
+            "description": "Workflow: GET Tickets"
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por prioridade (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar?prioridade=alta",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "tickets",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "prioridade",
+                  "value": "alta"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Status + prioridade (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar?status=aberto&prioridade=alta",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "tickets",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "aberto"
+                },
+                {
+                  "key": "prioridade",
+                  "value": "alta"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sem filtro (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Codigo FILTRO_OBRIGATORIO', () => pm.expect(pm.response.json().codigo).to.eql('FILTRO_OBRIGATORIO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "tickets",
+                "listar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Status inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Codigo STATUS_INVALIDO', () => pm.expect(pm.response.json().codigo).to.eql('STATUS_INVALIDO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar?status=fechado",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "tickets",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "fechado"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05  GET Ticket por ID",
+      "item": [
+        {
+          "name": "Ticket com interações (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Tem interacoes array', () => {",
+                  "  pm.expect(json.interacoes).to.be.an('array');",
+                  "  pm.expect(json.interacoes.length).to.be.at.least(1);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-ticket-id/tickets/id/92845250-3a28-4821-9df1-8f3fdca47377",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "bold-get-ticket-id",
+                "tickets",
+                "id",
+                "92845250-3a28-4821-9df1-8f3fdca47377"
+              ]
+            },
+            "description": "Rode o POST Tickets antes para popular ticket_id."
+          },
+          "response": []
+        },
+        {
+          "name": "ID inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Codigo ID_INVALIDO', () => pm.expect(pm.response.json().codigo).to.eql('ID_INVALIDO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-ticket-id/tickets/id/abc123",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "bold-get-ticket-id",
+                "tickets",
+                "id",
+                "abc123"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ticket não existe (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Codigo TICKET_NAO_ENCONTRADO', () => pm.expect(pm.response.json().codigo).to.eql('TICKET_NAO_ENCONTRADO'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-ticket-id/tickets/id/00000000-0000-4000-8000-000000000000",
+              "protocol": "https",
+              "host": [
+                "dev",
+                "boldsolution",
+                "com",
+                "br"
+              ],
+              "path": [
+                "webhook",
+                "bold-get-ticket-id",
+                "tickets",
+                "id",
+                "00000000-0000-4000-8000-000000000000"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://dev.boldsolution.com.br/webhook-test"
+    },
+    {
+      "key": "cliente_id",
+      "value": "18695f4c-43be-4646-83dd-98c55ca9c90f"
+    },
+    {
+      "key": "ticket_id",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

@@ -20,6 +20,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      '/webhook-site-api': {
+        target: 'https://webhook.site',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/webhook-site-api/, ''),
+      },
     },
   },
 })

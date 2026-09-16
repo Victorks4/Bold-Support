@@ -1,0 +1,135 @@
+{
+  "info": {
+    "_postman_id": "b710e7a3-65c7-4ae8-b89a-7cd24773eb21",
+    "name": "Bold Support - Etapa 4 (Auth)",
+    "description": "Autenticação JWT por agente.\n\n1. Execute **POST - Login agente** (rota pública).\n2. O script salva `access_token` no environment.\n3. Demais requests das collections Etapa 1/2 usam `Authorization: Bearer {{access_token}}`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49211461",
+    "_collection_link": "https://go.postman.co/collection/49211461-b710e7a3-65c7-4ae8-b89a-7cd24773eb21?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "POST - Login agente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.test('Retorna access_token', () => pm.expect(json.access_token).to.be.a('string'));",
+              "pm.environment.set('access_token', json.access_token);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"agente@bold.com\",\n  \"senha\": \"Bold@2026\"\n}"
+        },
+        "url": {
+          "raw": "https://dev.boldsolution.com.br/webhook/auth/login",
+          "protocol": "https",
+          "host": [
+            "dev",
+            "boldsolution",
+            "com",
+            "br"
+          ],
+          "path": [
+            "webhook",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Workflow: `POST_Auth_Login.json` (público - sem Bearer).\n\nCredenciais de teste documentadas em `docs/installation.md`."
+      },
+      "response": []
+    },
+    {
+      "name": "GET - Clientes (com Bearer)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/clientes",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "clientes"
+          ]
+        },
+        "description": "Exemplo de rota protegida. Sem token válido → 401 `TOKEN_INVALIDO`."
+      },
+      "response": []
+    },
+    {
+      "name": "GET -Clientes (sem Bearer - 401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 401', () => pm.response.to.have.status(401));",
+              "pm.test('Codigo TOKEN_INVALIDO', () => pm.expect(pm.response.json().codigo).to.eql('TOKEN_INVALIDO'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/clientes",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "clientes"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

@@ -4,19 +4,20 @@ Sistema de chamados (tickets) para suporte ao cliente. Backend em **n8n** com pe
 
 ## Objetivo
 
-Permitir cadastro de clientes, abertura e consulta de chamados, com histórico de interações — exposto via API HTTP para consumo por frontend e integrações.
+Permitir cadastro de clientes, abertura e consulta de chamados, com histórico de interações - exposto via API HTTP para consumo por frontend e integrações.
 
 ## Funcionalidades
 
-### Etapa 1 — API básica
+### Etapa 1 - API básica
 
+- Listar clientes (`GET /clientes`)
 - Cadastrar cliente (`POST /clientes`)
-- Consultar cliente por ID (`GET /clientes/:id`)
-- Criar ticket com protocolo e interação automática (`POST /tickets`)
-- Listar tickets com filtro por status e/ou prioridade (`GET /tickets`)
-- Consultar ticket com histórico de interações (`GET /tickets/:id`)
+- Consultar cliente por ID (`GET /clientes/id/:id`)
+- Criar ticket com protocolo e interação automática (`POST /tickets/criar`)
+- Listar tickets com filtro por status e/ou prioridade (`GET /tickets/listar`)
+- Consultar ticket com histórico de interações (`GET /tickets/id/:id`)
 
-### Etapa 2 — Regras de negócio e integração
+### Etapa 2 - Regras de negócio e integração
 
 - Remover cliente sem tickets (`DELETE /clientes/remover/:id`)
 - Remover ticket (`DELETE /tickets/remover/:id`)
@@ -24,7 +25,7 @@ Permitir cadastro de clientes, abertura e consulta de chamados, com histórico d
 - Adicionar interação (`POST /tickets/adicionar-interacao/:id`)
 - Webhook HTTP externo em eventos de ticket
 
-### Etapa 3 — Console do agente (frontend)
+### Etapa 3 - Console do agente (frontend)
 
 - Login split-screen com vídeo e identidade Bold
 - Dashboard com métricas derivadas, últimos eventos e chamados recentes
@@ -32,9 +33,17 @@ Permitir cadastro de clientes, abertura e consulta de chamados, com histórico d
 - Central de chamados (tabela desktop + cards mobile, filtros locais)
 - Detalhe do chamado com timeline de interações
 - Base de clientes e abertura de chamado pelo agente
-- Log simulado de eventos/webhooks n8n
+- Integração com API n8n real (clientes, tickets, status, interações)
+- Log de eventos derivados das mutações + polling opcional webhook.site
 - Layout responsivo (sidebar colapsável, mobile nav, notificações)
 - Tema claro/escuro
+
+### Etapa 4 - Autenticação JWT
+
+- Login por agente (`POST /auth/login`)
+- JWT HS256 validado no n8n em cada rota protegida
+- Sessão no frontend (`localStorage` / `sessionStorage`)
+- Logout e redirect automático em token expirado
 
 ## Stack
 
@@ -60,9 +69,9 @@ O desafio exige divisão clara das entregas no GitHub:
 |--------|-------|--------|
 | [`stage/01-core-api`](../../tree/stage/01-core-api) | CRUD básico (5 rotas) | Concluída |
 | [`stage/02-ticket-operations`](../../tree/stage/02-ticket-operations) | DELETE, PATCH, interações, webhook | Concluída |
-| [`stage/03-frontend`](../../tree/stage/03-frontend) | Frontend React — console do agente | Concluída |
-| [`stage/04-authentication`](../../tree/stage/04-authentication) | Autenticação | Pendente |
-| `main` | Última etapa estável | Etapas 1, 2 e 3 |
+| [`stage/03-frontend`](../../tree/stage/03-frontend) | Frontend React - console do agente | Concluída |
+| [`stage/04-authentication`](../../tree/stage/04-authentication) | Autenticação JWT | Concluída |
+| `main` | Última etapa estável | Etapas 1, 2, 3 e 4 |
 
 Detalhes e checklist: [**docs/entregas.md**](docs/entregas.md)
 
@@ -85,9 +94,11 @@ cp .env.example .env
 
 # 3. Banco de dados
 psql "$DATABASE_URL" -f database/migrations/001_initial_schema.sql
+psql "$DATABASE_URL" -f database/migrations/002_agentes.sql
+psql "$DATABASE_URL" -f database/migrations/003_app_config.sql
 
 # 4. Importar workflows de n8n/workflows/ no n8n
-# 5. Testar com Postman — ver docs/installation.md
+# 5. Testar com Postman - ver docs/installation.md
 
 # 6. Frontend
 cd frontend
@@ -115,7 +126,8 @@ Detalhes em [`.env.example`](.env.example).
 
 | Variável | Descrição |
 |----------|-----------|
-| `VITE_N8N_WEBHOOK_BASE_URL` | Base URL dos webhooks n8n (integração futura) |
+| `VITE_N8N_WEBHOOK_BASE_URL` | Base URL dos webhooks n8n (`/webhook` em dev com proxy Vite) |
+| `VITE_WEBHOOK_SITE_TOKEN` | (Opcional) UUID do webhook.site para sincronizar `/eventos` |
 
 Detalhes em [`frontend/.env.example`](frontend/.env.example).
 
@@ -138,18 +150,17 @@ Bold-Support/
 │       ├── pages/             # Dashboard, Fila, Chamados, Clientes, Eventos
 │       ├── components/        # layout, dashboard, queue, tickets, ui
 │       └── lib/
-│           ├── store/         # AppDataContext (estado mock)
-│           ├── mocks/         # Dados iniciais
-│           ├── api/           # Stub para integração n8n
+│           ├── store/         # AppDataContext (estado + API n8n)
+│           ├── api/           # client.ts, clientes.ts, tickets.ts
 │           └── types/         # Cliente, Ticket, Evento
-├── n8n/workflows/             # Backend (9 workflows)
-├── postman/                   # Collection de testes
+├── n8n/workflows/             # Backend (10 workflows)
+├── postman/                   # Collections Etapa 1 e 2 + environment
 └── .env.example
 ```
 
 ## Frontend (Etapa 3)
 
-Console do agente Bold — login em `/`, dashboard em `/dashboard`. Dados em memória (mock); integração com API n8n prevista antes da Etapa 4.
+Console do agente Bold - login em `/`, dashboard em `/dashboard`. Consumo da API n8n via proxy Vite em desenvolvimento (`/webhook` → `dev.boldsolution.com.br`).
 
 ```bash
 cd frontend
@@ -167,17 +178,17 @@ Assets: favicon `boldfavicon.png` | sidebar `boldiconsidebar.png` | login `logob
 
 Backend: cada rota HTTP é um workflow n8n (**Webhook → validação → Postgres → Respond**).
 
-Frontend: SPA React com estado mock em `AppDataContext`; stub HTTP em `lib/api/client.ts` para futura integração.
+Frontend: SPA React com `AppDataContext` consumindo webhooks n8n via `lib/api/`.
 
 ```mermaid
 flowchart LR
   Browser[Navegador React]
-  Mock[AppDataContext]
-  N8N[n8n]
+  Ctx[AppDataContext]
+  N8N[n8n Webhooks]
   DB[(PostgreSQL)]
 
-  Browser --> Mock
-  Browser -.->|futuro| N8N
+  Browser --> Ctx
+  Ctx -->|HTTP /webhook| N8N
   N8N --> DB
 ```
 
@@ -185,17 +196,20 @@ Detalhes: [**docs/architecture.md**](docs/architecture.md)
 
 ## API
 
-| Método | Rota | Workflow |
-|--------|------|----------|
+| Método | Rota lógica | Workflow |
+|--------|-------------|----------|
+| GET | `/clientes` | `GET_Clientes.json` |
 | POST | `/clientes` | `POST_Clientes.json` |
-| GET | `/clientes/:id` | `GET_Cliente_por_ID.json` |
+| GET | `/clientes/id/:id` | `GET_Cliente_por_ID.json` |
 | DELETE | `/clientes/remover/:id` | `DELETE_Cliente_por_ID.json` |
-| POST | `/tickets` | `POST_Tickets.json` |
-| GET | `/tickets` | `GET_Tickets.json` |
-| GET | `/tickets/:id` | `GET_Ticket_por_ID.json` |
+| POST | `/tickets/criar` | `POST_Tickets.json` |
+| GET | `/tickets/listar` | `GET_Tickets.json` |
+| GET | `/tickets/id/:id` | `GET_Ticket_por_ID.json` |
 | DELETE | `/tickets/remover/:id` | `DELETE_Ticket_por_ID.json` |
 | PATCH | `/tickets/atualizar-status/:id` | `PATCH_Ticket_Status.json` |
 | POST | `/tickets/adicionar-interacao/:id` | `POST_Ticket_Interacao.json` |
+
+> URLs de produção na instância Bold podem incluir `webhookId` no path - ver tabela completa em [docs/api.md](docs/api.md).
 
 Documentação completa: [**docs/api.md**](docs/api.md) | OpenAPI: [**docs/openapi.yaml**](docs/openapi.yaml)
 
@@ -211,12 +225,11 @@ Respostas de erro no formato `{ "erro": "...", "codigo": "..." }` com HTTP 400 (
 
 ## Autenticação
 
-**Não implementada** (prevista para Etapa 4). O login do frontend é mock — qualquer credencial redireciona ao dashboard.
+JWT (Etapa 4). Login em `POST /auth/login` com email e senha; rotas protegidas exigem `Authorization: Bearer <token>`. Detalhes em [docs/api.md](docs/api.md) e [docs/installation.md](docs/installation.md).
 
 ## Limitações conhecidas
 
-- Frontend usa dados mock em memória; integração com API n8n real pendente.
-- Autenticação JWT/OAuth prevista para Etapa 4.
-- Paths da Etapa 2 usam prefixos únicos (`remover`, `atualizar-status`, `adicionar-interacao`) — exigência do n8n hospedado.
+- URLs n8n misturam path simples e path com `webhookId`, copiar Production URL de cada workflow.
+- Paths da Etapa 2 usam prefixos únicos (`remover`, `atualizar-status`, `adicionar-interacao`), exigência do n8n hospedado.
 - Webhook externo usa URL configurável; falha não bloqueia a API (`continueOnFail`).
-- Sem portal self-service do cliente — o produto é console do agente Bold.
+- Sem portal self-service do cliente, o produto é console do agente Bold.

@@ -1,12 +1,15 @@
-# Banco de dados — Bold Support
+# Banco de dados - Bold Support
 
 ## Tecnologia
 
 - **SGBD:** PostgreSQL
 - **Provedor:** Supabase (compatível com qualquer instância PostgreSQL 14+)
-- **Migration:** [`database/migrations/001_initial_schema.sql`](../database/migrations/001_initial_schema.sql)
+- **Migrations:**
+  - [`database/migrations/001_initial_schema.sql`](../database/migrations/001_initial_schema.sql)
+  - [`database/migrations/002_agentes.sql`](../database/migrations/002_agentes.sql)
+  - [`database/migrations/003_app_config.sql`](../database/migrations/003_app_config.sql)
 
-Não há seeders no repositório. Dados iniciais são criados via API (`POST /clientes`, `POST /tickets`).
+Dados iniciais de clientes e tickets são criados via API. A migration `002_agentes.sql` inclui um agente de teste para desenvolvimento (credenciais em [`installation.md`](installation.md)).
 
 ## Diagrama ER
 
@@ -14,6 +17,14 @@ Não há seeders no repositório. Dados iniciais são criados via API (`POST /cl
 erDiagram
   clientes ||--o{ tickets : possui
   tickets ||--o{ interacoes : tem
+
+  agentes {
+    uuid id PK
+    varchar nome
+    varchar email UK
+    text senha_hash
+    timestamptz criado_em
+  }
 
   clientes {
     uuid id PK
@@ -45,6 +56,28 @@ erDiagram
 ```
 
 ## Tabelas
+
+### `agentes`
+
+| Coluna | Tipo | Restrições | Descrição |
+|--------|------|------------|-----------|
+| `id` | UUID | PK, default `gen_random_uuid()` | Identificador do agente |
+| `nome` | VARCHAR(150) | NOT NULL | Nome exibido no console |
+| `email` | VARCHAR(255) | NOT NULL, UNIQUE | E-mail de login |
+| `senha_hash` | TEXT | NOT NULL | Hash bcrypt via `crypt()` / `gen_salt('bf')` |
+| `criado_em` | TIMESTAMPTZ | NOT NULL, default `now()` | Data de cadastro |
+
+**Acesso:** somente via workflows n8n (credencial servidor). RLS desligado - o frontend não acessa o Supabase diretamente.
+
+### `app_config`
+
+| Coluna | Tipo | Restrições | Descrição |
+|--------|------|------------|-----------|
+| `chave` | VARCHAR(100) | PK | Nome da configuração (ex.: `jwt_secret`) |
+| `valor` | TEXT | NOT NULL | Valor em texto |
+| `atualizado_em` | TIMESTAMPTZ | NOT NULL, default `now()` | Última alteração |
+
+Chaves usadas na Etapa 4: `jwt_secret`, `jwt_expires_in`. Altere `jwt_secret` no Supabase SQL Editor após rodar `003_app_config.sql`.
 
 ### `clientes`
 
@@ -92,8 +125,8 @@ erDiagram
 
 | Relação | Comportamento |
 |---------|---------------|
-| `tickets.cliente_id` → `clientes.id` | `ON DELETE RESTRICT` — não permite excluir cliente com tickets |
-| `interacoes.ticket_id` → `tickets.id` | `ON DELETE CASCADE` — interações removidas com o ticket |
+| `tickets.cliente_id` → `clientes.id` | `ON DELETE RESTRICT` - não permite excluir cliente com tickets |
+| `interacoes.ticket_id` → `tickets.id` | `ON DELETE CASCADE` - interações removidas com o ticket |
 
 ## Índices
 
@@ -110,11 +143,13 @@ Aplicar o schema inicial:
 
 ```bash
 psql "$DATABASE_URL" -f database/migrations/001_initial_schema.sql
+psql "$DATABASE_URL" -f database/migrations/002_agentes.sql
+psql "$DATABASE_URL" -f database/migrations/003_app_config.sql
 ```
 
-No Supabase: SQL Editor → colar o conteúdo do arquivo → Run.
+No Supabase: SQL Editor → colar o conteúdo de cada arquivo → Run (na ordem). Após `003`, altere `jwt_secret` em `app_config` antes de usar em produção.
 
-**Reset completo (cuidado — apaga dados):**
+**Reset completo (cuidado - apaga dados):**
 
 ```sql
 DROP TABLE IF EXISTS interacoes, tickets, clientes CASCADE;

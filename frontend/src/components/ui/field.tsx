@@ -17,3 +17,26 @@ export function FieldLabel({ className, ...props }: ComponentProps<'label'>) {
     />
   )
 }
+
+export function FieldError({ className, ...props }: ComponentProps<'p'>) {
+  return (
+    <p
+      role="alert"
+      className={cn('text-xs font-medium text-red-600 dark:text-red-400', className)}
+      {...props}
+    />
+  )
+}
+
+export function FormAlert({ className, ...props }: ComponentProps<'div'>) {
+  return (
+    <div
+      role="alert"
+      className={cn(
+        'rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300',
+        className,
+      )}
+      {...props}
+    />
+  )
+}

@@ -1,7 +1,6 @@
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ClientRegisterCard } from '@/components/clients/ClientRegisterCard'
 import { TicketCreateCard } from '@/components/clients/TicketCreateCard'
-import { getInitials } from '@/lib/mocks/clients'
 import { useAppData } from '@/lib/store/AppDataContext'
 
 export function ClientsPage() {
@@ -22,7 +21,6 @@ export function ClientsPage() {
           onAdd={addCliente}
           recentClientes={clientes}
           countTickets={countTicketsByCliente}
-          getInitials={getInitials}
         />
 
         <div className="hidden lg:flex absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 items-center">

@@ -1,34 +1,39 @@
 /**
  * Cliente HTTP para workflows n8n.
- * URLs: {VITE_N8N_WEBHOOK_BASE_URL}/{webhookId}/{path}
+ * URLs de produção: {base}/{path} ou {base}/{webhookId}/{path}
+ * Copie a Production URL de cada workflow no n8n - formatos podem variar por rota.
  */
+
+import { getAccessToken } from '@/lib/auth/token-storage'
 
 const baseUrl = import.meta.env.VITE_N8N_WEBHOOK_BASE_URL ?? '/webhook'
 
-export const webhookIds = {
-  postClientes: import.meta.env.VITE_WEBHOOK_ID_POST_CLIENTES ?? 'bold-post-clientes',
-  getClientes: import.meta.env.VITE_WEBHOOK_ID_GET_CLIENTES ?? 'bold-get-clientes',
-  getCliente: import.meta.env.VITE_WEBHOOK_ID_GET_CLIENTE ?? 'bold-get-cliente',
-  deleteCliente: import.meta.env.VITE_WEBHOOK_ID_DELETE_CLIENTE ?? 'bold-delete-cliente',
-  postTickets: import.meta.env.VITE_WEBHOOK_ID_POST_TICKETS ?? 'bold-post-tickets',
-  getTickets: import.meta.env.VITE_WEBHOOK_ID_GET_TICKETS ?? 'bold-get-tickets',
-  getTicket: import.meta.env.VITE_WEBHOOK_ID_GET_TICKET ?? 'bold-get-ticket-id',
-  deleteTicket: import.meta.env.VITE_WEBHOOK_ID_DELETE_TICKET ?? 'bold-delete-ticket',
-  patchStatus: import.meta.env.VITE_WEBHOOK_ID_PATCH_STATUS ?? 'bold-patch-ticket-status',
-  postInteracao: import.meta.env.VITE_WEBHOOK_ID_POST_INTERACAO ?? 'bold-post-ticket-interacao',
-} as const
+let unauthorizedHandler: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler
+}
+
+function webhookPath(path: string, webhookId?: string): string {
+  const normalized = path.replace(/^\//, '')
+  return webhookId ? `${webhookId}/${normalized}` : normalized
+}
 
 export const webhookPaths = {
-  postClientes: 'clientes',
-  getClientes: 'clientes',
-  getCliente: (id: string) => `clientes/${id}`,
-  deleteCliente: (id: string) => `clientes/remover/${id}`,
-  postTickets: 'tickets',
-  getTickets: 'tickets',
-  getTicket: (id: string) => `tickets/${id}`,
-  deleteTicket: (id: string) => `tickets/remover/${id}`,
-  patchTicketStatus: (id: string) => `tickets/atualizar-status/${id}`,
-  postInteracao: (id: string) => `tickets/adicionar-interacao/${id}`,
+  authLogin: webhookPath('auth/login'),
+  postClientes: webhookPath('clientes'),
+  getClientes: webhookPath('clientes'),
+  getCliente: (id: string) => webhookPath(`clientes/id/${id}`),
+  deleteCliente: (id: string) => webhookPath(`clientes/remover/${id}`, 'bold-delete-cliente'),
+  postTickets: webhookPath('tickets/criar'),
+  getTickets: webhookPath('tickets/listar'),
+  // Esta instância registra GET por ID com webhookId no meio da URL (ver node Webhook no n8n).
+  getTicket: (id: string) => webhookPath(`tickets/id/${id}`, 'bold-get-ticket-id'),
+  deleteTicket: (id: string) => webhookPath(`tickets/remover/${id}`, 'bold-delete-ticket'),
+  patchTicketStatus: (id: string) =>
+    webhookPath(`tickets/atualizar-status/${id}`, 'bold-patch-ticket-status'),
+  postInteracao: (id: string) =>
+    webhookPath(`tickets/adicionar-interacao/${id}`, 'bold-post-ticket-interacao'),
 } as const
 
 export class ApiError extends Error {
@@ -43,26 +48,54 @@ export class ApiError extends Error {
   }
 }
 
-export function buildWebhookUrl(webhookId: string, path: string): string {
+export function buildWebhookUrl(path: string): string {
   const normalizedBase = baseUrl.replace(/\/$/, '')
-  return `${normalizedBase}/${webhookId}/${path}`
+  const normalizedPath = path.replace(/^\//, '')
+  return `${normalizedBase}/${normalizedPath}`
 }
 
-export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
+type ApiFetchInit = RequestInit & { skipAuth?: boolean }
+
+export async function apiFetch<T>(url: string, init?: ApiFetchInit): Promise<T> {
+  const { skipAuth, ...requestInit } = init ?? {}
+  const headers = new Headers(requestInit.headers)
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+  if (!skipAuth) {
+    const token = getAccessToken()
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`)
+    }
+  }
+
   const response = await fetch(url, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
+    ...requestInit,
+    headers,
   })
 
   const text = await response.text()
-  const data = text ? (JSON.parse(text) as T & { erro?: string; codigo?: string }) : ({} as T)
+  let data: T & { erro?: string; codigo?: string; message?: string }
+  try {
+    data = text
+      ? (JSON.parse(text) as T & { erro?: string; codigo?: string; message?: string })
+      : ({} as T & { erro?: string; codigo?: string; message?: string })
+  } catch {
+    const trimmed = text.trim()
+    const isHtml = /^<!DOCTYPE html|^<html/i.test(trimmed)
+    const message = isHtml
+      ? 'Erro interno no n8n. Reimporte o workflow e confira a Production URL.'
+      : trimmed || 'Resposta inválida da API'
+    throw new ApiError(message, 'RESPOSTA_INVALIDA', response.status)
+  }
 
   if (!response.ok) {
-    const erro = (data as { erro?: string }).erro ?? 'Erro na requisição'
-    const codigo = (data as { codigo?: string }).codigo ?? 'ERRO_DESCONHECIDO'
+    const body = data as { erro?: string; message?: string; codigo?: string }
+    const erro = body.erro ?? body.message ?? 'Erro na requisição'
+    const codigo = body.codigo ?? 'ERRO_DESCONHECIDO'
+    if (response.status === 401 && codigo === 'TOKEN_INVALIDO') {
+      unauthorizedHandler?.()
+    }
     throw new ApiError(erro, codigo, response.status)
   }
 

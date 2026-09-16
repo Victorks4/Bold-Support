@@ -2,36 +2,79 @@ import { useState } from 'react'
 import { Plus, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Field, FieldError, FieldGroup, FieldLabel, FormAlert } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { ApiError } from '@/lib/api/client'
 import type { Cliente } from '@/lib/types/cliente'
+import {
+  hasFieldErrors,
+  mapClienteApiError,
+  validateClienteInput,
+  type FieldErrors,
+} from '@/lib/utils/form-validation'
+import { getInitials } from '@/lib/utils/initials'
+import { cn } from '@/lib/utils'
 
 type ClientRegisterCardProps = {
   onAdd: (input: { nome: string; email: string; telefone: string }) => void | Promise<unknown>
   recentClientes: Cliente[]
   countTickets: (id: string) => number
-  getInitials: (nome: string) => string
 }
 
 const avatarColors = ['blue', 'green', 'purple', 'orange', 'teal'] as const
+
+type ClienteField = 'nome' | 'email' | 'telefone'
 
 export function ClientRegisterCard({
   onAdd,
   recentClientes,
   countTickets,
-  getInitials,
 }: ClientRegisterCardProps) {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [telefone, setTelefone] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [errors, setErrors] = useState<FieldErrors<ClienteField>>({})
+
+  function clearFieldError(field: ClienteField) {
+    setErrors((prev) => {
+      if (!prev[field] && !prev.form) return prev
+      const next = { ...prev }
+      delete next[field]
+      delete next.form
+      return next
+    })
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!nome.trim() || !email.trim() || !telefone.trim()) return
-    await onAdd({ nome: nome.trim(), email: email.trim(), telefone: telefone.trim() })
-    setNome('')
-    setEmail('')
-    setTelefone('')
+    const payload = { nome, email, telefone }
+    const validation = validateClienteInput(payload)
+    if (hasFieldErrors(validation)) {
+      setErrors(validation)
+      return
+    }
+
+    setSubmitting(true)
+    setErrors({})
+    try {
+      await onAdd({
+        nome: payload.nome.trim(),
+        email: payload.email.trim(),
+        telefone: payload.telefone.trim(),
+      })
+      setNome('')
+      setEmail('')
+      setTelefone('')
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setErrors(mapClienteApiError(err))
+      } else {
+        setErrors({ form: 'Não foi possível cadastrar o cliente. Tente novamente.' })
+      }
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -49,46 +92,66 @@ export function ClientRegisterCard({
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
+          {errors.form && <FormAlert className="mb-4">{errors.form}</FormAlert>}
           <FieldGroup>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
-                <FieldLabel>Nome</FieldLabel>
+                <FieldLabel htmlFor="cliente-nome">Nome</FieldLabel>
                 <Input
+                  id="cliente-nome"
                   placeholder="Nome completo"
                   value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  className="h-10 rounded-xl"
+                  onChange={(e) => {
+                    setNome(e.target.value)
+                    clearFieldError('nome')
+                  }}
+                  aria-invalid={Boolean(errors.nome)}
+                  className={cn('h-10 rounded-xl', errors.nome && 'border-red-400 focus-visible:ring-red-400')}
                 />
+                {errors.nome && <FieldError>{errors.nome}</FieldError>}
               </Field>
               <Field>
-                <FieldLabel>Email</FieldLabel>
+                <FieldLabel htmlFor="cliente-email">Email</FieldLabel>
                 <Input
+                  id="cliente-email"
                   type="email"
                   placeholder="nome@empresa.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-10 rounded-xl"
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    clearFieldError('email')
+                  }}
+                  aria-invalid={Boolean(errors.email)}
+                  className={cn('h-10 rounded-xl', errors.email && 'border-red-400 focus-visible:ring-red-400')}
                 />
+                {errors.email && <FieldError>{errors.email}</FieldError>}
               </Field>
             </div>
             <Field>
-              <FieldLabel>Telefone</FieldLabel>
+              <FieldLabel htmlFor="cliente-telefone">Telefone</FieldLabel>
               <Input
+                id="cliente-telefone"
                 placeholder="(00) 00000-0000"
                 value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-                className="h-10 rounded-xl"
+                onChange={(e) => {
+                  setTelefone(e.target.value)
+                  clearFieldError('telefone')
+                }}
+                aria-invalid={Boolean(errors.telefone)}
+                className={cn('h-10 rounded-xl', errors.telefone && 'border-red-400 focus-visible:ring-red-400')}
               />
+              {errors.telefone && <FieldError>{errors.telefone}</FieldError>}
             </Field>
           </FieldGroup>
           <Button
             type="submit"
             variant="outline"
+            disabled={submitting}
             className="mt-4 h-10 w-full rounded-xl border-gray-200 font-semibold"
           >
             <Plus className="h-4 w-4" />
-            Adicionar cliente
+            {submitting ? 'Salvando...' : 'Adicionar cliente'}
           </Button>
         </form>
 

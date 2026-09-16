@@ -1,9 +1,9 @@
 ---
 name: bold-support
-description: Contexto completo do desafio Bold Support — stack n8n+Supabase, convenções de workflows, etapas de entrega, branches Git, bugs conhecidos e checklist da Etapa 2. Use antes de implementar rotas, documentar ou continuar entregas.
+description: Contexto completo do desafio Bold Support - stack n8n+Supabase, convenções de workflows, etapas de entrega, branches Git, bugs conhecidos e checklist da Etapa 2. Use antes de implementar rotas, documentar ou continuar entregas.
 ---
 
-# Bold Support — Contexto do Projeto
+# Bold Support - Contexto do Projeto
 
 Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia este arquivo antes de implementar novas rotas, criar workflows n8n ou atualizar documentação.
 
@@ -39,7 +39,7 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 ### n8n hospedado
 
 - URL base: `https://dev.boldsolution.com.br`
-- **Produção:** `/webhook/{webhookId}/{path}` — workflows devem estar **ativos**
+- **Produção:** `/webhook/{webhookId}/{path}` - workflows devem estar **ativos**
 - **Teste:** `/webhook-test/<rota>` + **Listen for test event** (1 Listen = 1 request)
 
 Paths Etapa 2 (únicos no n8n): `clientes/remover/:id`, `tickets/remover/:id`, `tickets/atualizar-status/:id`, `tickets/adicionar-interacao/:id`
@@ -73,7 +73,7 @@ Aplicar em **todos** os workflows novos e existentes:
 - UUID válido inexistente → **404**
 - Erro n8n "webhook not registered" → Listen inativo, não é 404 da API
 
-## Etapa 1 — Concluída (branch `stage/01-core-api`)
+## Etapa 1 - Concluída (branch `stage/01-core-api`)
 
 | Método | Rota | Arquivo |
 |--------|------|---------|
@@ -83,7 +83,7 @@ Aplicar em **todos** os workflows novos e existentes:
 | GET | `/tickets` | `GET_Tickets.json` |
 | GET | `/tickets/:id` | `GET_Ticket_por_ID.json` |
 
-## Etapa 2 — Concluída (branch `stage/02-ticket-operations`)
+## Etapa 2 - Concluída (branch `stage/02-ticket-operations`)
 
 ### Rotas implementadas
 
@@ -100,8 +100,8 @@ Disparar webhook mock em eventos de ticket com campos: `protocolo`, `evento`, `s
 
 ### Regras de banco relevantes
 
-- `clientes` → `tickets`: `ON DELETE RESTRICT` — não excluir cliente com tickets (retornar erro de negócio)
-- `tickets` → `interacoes`: `ON DELETE CASCADE` — excluir ticket remove interações
+- `clientes` → `tickets`: `ON DELETE RESTRICT` - não excluir cliente com tickets (retornar erro de negócio)
+- `tickets` → `interacoes`: `ON DELETE CASCADE` - excluir ticket remove interações
 - Status válidos: `aberto`, `em_atendimento`, `aguardando_cliente`, `resolvido`, `cancelado`
 - Prioridades: `baixa`, `media`, `alta`
 - Tipos interação: `sistema`, `cliente`, `agente`
@@ -114,11 +114,11 @@ Disparar webhook mock em eventos de ticket com campos: `protocolo`, `evento`, `s
 4. Merge `stage/02-ticket-operations` → `main`
 5. Atualizar `docs/entregas.md`
 
-## Etapa 3 — Login (`stage/03-frontend`)
+## Etapa 3 - Login (`stage/03-frontend`)
 
-- `frontend/` — React + Vite + Tailwind
-- `public/videos/login.mp4` — vídeo painel esquerdo (local, não commitar)
-- `public/images/` — logos e assets
+- `frontend/` - React + Vite + Tailwind
+- `public/videos/login.mp4` - vídeo painel esquerdo (local, não commitar)
+- `public/images/` - logos e assets
 - UI espelha login Pointfy; auth real na Etapa 4
 
 ## Etapas futuras
@@ -151,16 +151,16 @@ Bold-Support/
 
 ## Skills relacionadas
 
-- `project-documentation` — ao criar/atualizar README, API, arquitetura
-- `bold-support` (esta) — contexto de domínio, etapas e convenções n8n
+- `project-documentation` - ao criar/atualizar README, API, arquitetura
+- `bold-support` (esta) - contexto de domínio, etapas e convenções n8n
 
 ## Documentação de referência
 
-- `docs/entregas.md` — branches e checklist por etapa
-- `docs/api.md` — endpoints e códigos de erro
-- `docs/architecture.md` — fluxos e diagramas
-- `docs/installation.md` — setup Supabase + n8n + Postman
-- `docs/openapi.yaml` — contrato OpenAPI
+- `docs/entregas.md` - branches e checklist por etapa
+- `docs/api.md` - endpoints e códigos de erro
+- `docs/architecture.md` - fluxos e diagramas
+- `docs/installation.md` - setup Supabase + n8n + Postman
+- `docs/openapi.yaml` - contrato OpenAPI
 
 ## Segurança
 

@@ -1,4 +1,4 @@
-# Arquitetura — Bold Support
+# Arquitetura - Bold Support
 
 ## Visão geral
 
@@ -7,13 +7,13 @@ Bold Support é um sistema de chamados (tickets) com backend implementado em **n
 ```mermaid
 flowchart LR
   Browser[Navegador React]
-  Mock[AppDataContext mock]
+  Ctx[AppDataContext]
   Client[Postman / integrações]
   N8N[n8n Webhooks]
   PG[(PostgreSQL / Supabase)]
 
-  Browser --> Mock
-  Browser -.->|integração futura| N8N
+  Browser --> Ctx
+  Ctx -->|HTTP /webhook| N8N
   Client -->|HTTP| N8N
   N8N -->|SQL parametrizado| PG
   N8N -->|JSON| Client
@@ -30,13 +30,18 @@ flowchart LR
 
 ## Padrão: um workflow por rota
 
-| Workflow (n8n) | Arquivo | Método | Path |
-|----------------|---------|--------|------|
-| POST Clientes | `n8n/workflows/POST_Clientes.json` | POST | `/clientes` |
-| GET Cliente por ID | `n8n/workflows/GET_Cliente_por_ID.json` | GET | `/clientes/:id` |
-| POST Tickets | `n8n/workflows/POST_Tickets.json` | POST | `/tickets` |
-| GET Tickets | `n8n/workflows/GET_Tickets.json` | GET | `/tickets` |
-| GET Ticket por ID | `n8n/workflows/GET_Ticket_por_ID.json` | GET | `/tickets/:id` |
+| Workflow (n8n) | Arquivo | Método | Path (node Webhook) |
+|----------------|---------|--------|---------------------|
+| GET Clientes | `n8n/workflows/GET_Clientes.json` | GET | `clientes` |
+| POST Clientes | `n8n/workflows/POST_Clientes.json` | POST | `clientes` |
+| GET Cliente por ID | `n8n/workflows/GET_Cliente_por_ID.json` | GET | `clientes/id/:id` |
+| POST Tickets | `n8n/workflows/POST_Tickets.json` | POST | `tickets/criar` |
+| GET Tickets | `n8n/workflows/GET_Tickets.json` | GET | `tickets/listar` |
+| GET Ticket por ID | `n8n/workflows/GET_Ticket_por_ID.json` | GET | `tickets/id/:id` |
+| PATCH Status | `n8n/workflows/PATCH_Ticket_Status.json` | PATCH | `tickets/atualizar-status/:id` |
+| POST Interação | `n8n/workflows/POST_Ticket_Interacao.json` | POST | `tickets/adicionar-interacao/:id` |
+| DELETE Ticket | `n8n/workflows/DELETE_Ticket_por_ID.json` | DELETE | `tickets/remover/:id` |
+| DELETE Cliente | `n8n/workflows/DELETE_Cliente_por_ID.json` | DELETE | `clientes/remover/:id` |
 
 ## Fluxo de uma requisição (padrão)
 
@@ -91,11 +96,11 @@ sequenceDiagram
 
 ## Autenticação
 
-**Não identificado no código.** As rotas da Etapa 1 são públicas. Autenticação entre frontend e backend é requisito futuro do desafio (Etapa 4).
+JWT (Etapa 4). `POST /auth/login` emite o token; demais rotas exigem `Authorization: Bearer <token>`. Workflows n8n validam HMAC-SHA256 com `jwt_secret` em `app_config`. Detalhes em [api.md](api.md) e [installation.md](installation.md).
 
 ## Frontend (Etapa 3)
 
-SPA React em `frontend/` com **react-router-dom**. Estado global em `AppDataContext` (dados mock em memória). Stub HTTP em `lib/api/client.ts` preparado para consumir os webhooks n8n.
+SPA React em `frontend/` com **react-router-dom**. Estado global em `AppDataContext` consumindo a API n8n via `lib/api/` (proxy Vite `/webhook` em desenvolvimento).
 
 ### Camadas do frontend
 
@@ -104,7 +109,8 @@ SPA React em `frontend/` com **react-router-dom**. Estado global em `AppDataCont
 | Rotas | `src/App.tsx`, `src/pages/` | Navegação e composição de telas |
 | Layout | `src/components/layout/` | Sidebar, TopBar, AppShell, MobileNav |
 | Domínio | `src/components/{dashboard,queue,tickets,clients,events}/` | UI por feature |
-| Estado | `src/lib/store/AppDataContext.tsx` | CRUD mock de clientes, tickets, eventos |
+| Estado | `src/lib/store/AppDataContext.tsx` | Bootstrap API, CRUD, eventos derivados |
+| API | `src/lib/api/` | `client.ts`, `clientes.ts`, `tickets.ts`, `webhook-site.ts` |
 | Tipos | `src/lib/types/` | `Cliente`, `Ticket`, `WebhookEvento` |
 | Utilitários | `src/lib/utils/` | Métricas do dashboard, kanban DnD, formatação |
 | Tema | `src/lib/theme/ThemeProvider.tsx` | Modo claro/escuro (localStorage) |
@@ -121,26 +127,26 @@ SPA React em `frontend/` com **react-router-dom**. Estado global em `AppDataCont
 | `/clientes` | `ClientsPage` | Cadastro + abrir chamado |
 | `/eventos` | `EventsPage` | Log simulado de webhooks |
 
-### Fluxo do agente (mock)
+### Fluxo do agente (integrado)
 
 ```mermaid
 sequenceDiagram
   participant A as Agente
   participant UI as React SPA
   participant Ctx as AppDataContext
-  participant Log as logger.ts
+  participant N8N as n8n Webhooks
 
   A->>UI: Login (mock)
-  UI->>UI: /dashboard
-  A->>UI: Cadastrar cliente
-  UI->>Ctx: addCliente()
-  Ctx->>Log: log ação
+  UI->>Ctx: refresh()
+  Ctx->>N8N: GET clientes + GET tickets/listar
+  N8N-->>Ctx: dados
   A->>UI: Abrir chamado
   UI->>Ctx: addTicket()
-  Ctx->>Ctx: Gera protocolo + interação sistema
-  A->>UI: Mover card no kanban
+  Ctx->>N8N: POST tickets/criar
+  A->>UI: Alterar status no kanban
   UI->>Ctx: updateTicketStatus()
-  Ctx->>Ctx: Registra evento webhook simulado
+  Ctx->>N8N: PATCH atualizar-status
+  Ctx->>Ctx: Registra evento local
 ```
 
 > **Escopo:** console do agente Bold. Não há portal self-service para o cliente final.
@@ -178,9 +184,9 @@ Bold-Support/
 | n8n (Bold Solution) | Execução dos workflows e webhooks |
 | Supabase / PostgreSQL | Persistência de clientes, tickets e interações |
 
-Produção na instância Bold: `/webhook/{webhookId}/{path}` (workflows ativos). Teste: `/webhook-test/{path}` com Listen ativo.
+Produção na instância Bold: `/webhook/{path}` ou `/webhook/{webhookId}/{path}` conforme o workflow (ver `docs/api.md`). Teste: `/webhook-test/{path}` com Listen ativo.
 
-## Etapa 2 — Operações e integração (implementada)
+## Etapa 2 - Operações e integração (implementada)
 
 | Rota | Regra de negócio |
 |------|------------------|
@@ -191,5 +197,4 @@ Produção na instância Bold: `/webhook/{webhookId}/{path}` (workflows ativos).
 
 ## Etapas futuras (não implementadas)
 
-- Integração do frontend com API n8n real (substituir mock em `AppDataContext`)
 - Autenticação JWT/OAuth (Etapa 4)

@@ -8,9 +8,8 @@ import { VolumeChart } from '@/components/dashboard/VolumeChart'
 import { RecentEventsCard } from '@/components/dashboard/RecentEventsCard'
 import { staggerContainer, staggerItem } from '@/components/motion/PageTransition'
 import { Button } from '@/components/ui/button'
-import { volumeSemanal } from '@/lib/mocks/dashboard'
 import { useAppData } from '@/lib/store/AppDataContext'
-import { computeDashboardMetrics } from '@/lib/utils/dashboard-metrics'
+import { computeDashboardMetrics, volumeSemanal } from '@/lib/utils/dashboard-metrics'
 import { greeting } from '@/lib/utils/time'
 
 export function DashboardPage() {

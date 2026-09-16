@@ -1,4 +1,4 @@
-import { apiFetch, buildWebhookUrl, webhookIds, webhookPaths } from './client'
+import { apiFetch, buildWebhookUrl, webhookPaths } from './client'
 import type { InteracaoTipo, Ticket, TicketInput, TicketStatus } from '@/lib/types/ticket'
 import { sortByPrioridade } from '@/lib/utils/ticket-sort'
 
@@ -17,7 +17,7 @@ const ALL_STATUSES: TicketStatus[] = [
 ]
 
 export async function listTicketsByStatus(status: TicketStatus): Promise<Ticket[]> {
-  const url = `${buildWebhookUrl(webhookIds.getTickets, webhookPaths.getTickets)}?status=${status}`
+  const url = `${buildWebhookUrl(webhookPaths.getTickets)}?status=${status}`
   const data = await apiFetch<ListTicketsResponse>(url)
   return data.tickets ?? []
 }
@@ -32,12 +32,12 @@ export async function fetchAllTickets(): Promise<Ticket[]> {
 }
 
 export async function getTicket(id: string): Promise<Ticket> {
-  const url = buildWebhookUrl(webhookIds.getTicket, webhookPaths.getTicket(id))
+  const url = buildWebhookUrl(webhookPaths.getTicket(id))
   return apiFetch<Ticket>(url)
 }
 
 export async function createTicket(input: TicketInput): Promise<Ticket> {
-  const url = buildWebhookUrl(webhookIds.postTickets, webhookPaths.postTickets)
+  const url = buildWebhookUrl(webhookPaths.postTickets)
   return apiFetch<Ticket>(url, {
     method: 'POST',
     body: JSON.stringify(input),
@@ -45,7 +45,7 @@ export async function createTicket(input: TicketInput): Promise<Ticket> {
 }
 
 export async function patchTicketStatus(id: string, status: TicketStatus): Promise<Ticket> {
-  const url = buildWebhookUrl(webhookIds.patchStatus, webhookPaths.patchTicketStatus(id))
+  const url = buildWebhookUrl(webhookPaths.patchTicketStatus(id))
   return apiFetch<Ticket>(url, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
@@ -57,7 +57,7 @@ export async function addTicketInteracao(
   tipo: InteracaoTipo,
   mensagem: string,
 ): Promise<unknown> {
-  const url = buildWebhookUrl(webhookIds.postInteracao, webhookPaths.postInteracao(id))
+  const url = buildWebhookUrl(webhookPaths.postInteracao(id))
   return apiFetch(url, {
     method: 'POST',
     body: JSON.stringify({ tipo, mensagem }),
@@ -65,6 +65,6 @@ export async function addTicketInteracao(
 }
 
 export async function deleteTicket(id: string): Promise<void> {
-  const url = buildWebhookUrl(webhookIds.deleteTicket, webhookPaths.deleteTicket(id))
+  const url = buildWebhookUrl(webhookPaths.deleteTicket(id))
   await apiFetch(url, { method: 'DELETE' })
 }

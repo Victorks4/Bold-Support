@@ -1,20 +1,52 @@
 openapi: 3.0.3
 info:
   title: Bold Support API
-  description: API de chamados — backend em n8n (webhooks) + PostgreSQL (Supabase)
-  version: 2.0.0
+  description: API de chamados - backend em n8n (webhooks) + PostgreSQL (Supabase)
+  version: 3.0.0
 
 servers:
   - url: https://dev.boldsolution.com.br/webhook
-    description: n8n — produção (workflows ativos; URL inclui webhookId por rota)
+    description: n8n - produção (paths lógicos; algumas rotas usam webhookId no path real - ver docs/api.md)
   - url: https://dev.boldsolution.com.br/webhook-test
-    description: n8n — teste (Listen for test event)
+    description: n8n - teste (Listen for test event)
 
 paths:
+  /auth/login:
+    post:
+      summary: Login do agente
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, senha]
+              properties:
+                email:
+                  type: string
+                  format: email
+                senha:
+                  type: string
+      responses:
+        '200':
+          description: Token JWT emitido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '401':
+          $ref: '#/components/responses/NaoAutorizado'
+
   /clientes:
     post:
       summary: Cadastrar cliente
       tags: [Clientes]
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -35,6 +67,8 @@ paths:
     get:
       summary: Listar clientes
       tags: [Clientes]
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Lista de clientes
@@ -51,10 +85,12 @@ paths:
                     items:
                       $ref: '#/components/schemas/Cliente'
 
-  /clientes/{id}:
+  /clientes/id/{id}:
     get:
       summary: Consultar cliente por ID
       tags: [Clientes]
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/UuidPath'
       responses:
@@ -73,6 +109,8 @@ paths:
     delete:
       summary: Remover cliente
       tags: [Clientes]
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/UuidPath'
       responses:
@@ -89,10 +127,12 @@ paths:
         '409':
           $ref: '#/components/responses/Conflito'
 
-  /tickets:
+  /tickets/listar:
     get:
       summary: Listar tickets com filtro
       tags: [Tickets]
+      security:
+        - bearerAuth: []
       parameters:
         - name: status
           in: query
@@ -113,9 +153,13 @@ paths:
                 $ref: '#/components/schemas/TicketListagem'
         '400':
           $ref: '#/components/responses/ErroValidacao'
+
+  /tickets/criar:
     post:
       summary: Criar ticket
       tags: [Tickets]
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -134,10 +178,12 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
-  /tickets/{id}:
+  /tickets/id/{id}:
     get:
       summary: Consultar ticket com histórico de interações
       tags: [Tickets]
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/UuidPath'
       responses:
@@ -156,6 +202,8 @@ paths:
     delete:
       summary: Remover ticket
       tags: [Tickets]
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/UuidPath'
       responses:
@@ -174,6 +222,8 @@ paths:
     patch:
       summary: Atualizar status do ticket
       tags: [Tickets]
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/UuidPath'
       requestBody:
@@ -198,6 +248,8 @@ paths:
     post:
       summary: Adicionar interação ao ticket
       tags: [Tickets]
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/UuidPath'
       requestBody:
@@ -219,6 +271,12 @@ paths:
           $ref: '#/components/responses/NaoEncontrado'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   parameters:
     UuidPath:
       name: id
@@ -229,6 +287,29 @@ components:
         format: uuid
 
   schemas:
+    Agente:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        email:
+          type: string
+          format: email
+
+    LoginResponse:
+      type: object
+      required: [access_token, expires_in, agente]
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+        agente:
+          $ref: '#/components/schemas/Agente'
+
     ClienteInput:
       type: object
       required: [nome, email, telefone]
@@ -400,6 +481,12 @@ components:
           type: string
 
   responses:
+    NaoAutorizado:
+      description: Credenciais inválidas ou token JWT inválido/expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
     ErroValidacao:
       description: Payload ou parâmetro inválido
       content:

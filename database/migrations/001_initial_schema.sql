@@ -1,4 +1,4 @@
--- Bold Support — schema inicial
+-- Bold Support - schema inicial
 -- Etapa 1: clientes, tickets e interacoes
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";

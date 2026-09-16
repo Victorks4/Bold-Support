@@ -36,7 +36,7 @@
   }
 }
 
-/* Logo sidebar — animação hover */
+/* Logo sidebar - animação hover */
 .bold-logo-img {
   transition: filter 320ms ease-out;
   will-change: transform, filter;

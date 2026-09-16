@@ -1,4 +1,4 @@
-# API — Bold Support (Etapas 1 e 2)
+# API - Bold Support (Etapas 1–4)
 
 Backend em **n8n** (instância Bold Solution).
 
@@ -14,21 +14,96 @@ https://dev.boldsolution.com.br/webhook
 https://dev.boldsolution.com.br/webhook-test
 ```
 
-Na instância hospedada, a URL de produção inclui o `webhookId` de cada workflow:
+Na instância hospedada, copie a **Production URL** de cada workflow no node `Webhook_1`. O formato pode variar:
 
-| Workflow | URL de produção |
-|----------|-----------------|
+| Workflow | URL de produção (instância Bold) |
+|----------|----------------------------------|
+| `GET_Clientes.json` | `/webhook/clientes` |
+| `GET_Cliente_por_ID.json` | `/webhook/clientes/id/:id` |
+| `POST_Clientes.json` | `/webhook/clientes` |
+| `POST_Tickets.json` | `/webhook/tickets/criar` |
+| `GET_Tickets.json` | `/webhook/tickets/listar` |
+| `GET_Ticket_por_ID.json` | `/webhook/bold-get-ticket-id/tickets/id/:id` |
 | `PATCH_Ticket_Status.json` | `/webhook/bold-patch-ticket-status/tickets/atualizar-status/:id` |
 | `POST_Ticket_Interacao.json` | `/webhook/bold-post-ticket-interacao/tickets/adicionar-interacao/:id` |
 | `DELETE_Ticket_por_ID.json` | `/webhook/bold-delete-ticket/tickets/remover/:id` |
 | `DELETE_Cliente_por_ID.json` | `/webhook/bold-delete-cliente/clientes/remover/:id` |
-| `GET_Clientes.json` | `/webhook/bold-get-clientes/clientes` |
+| `POST_Auth_Login.json` | `/webhook/auth/login` |
 
-> Paths únicos são obrigatórios no n8n — rotas da Etapa 2 usam prefixos (`remover`, `atualizar-status`, `adicionar-interacao`) para não conflitar com GET da Etapa 1.
+> Alguns workflows registram só o **path**; outros incluem o **Webhook ID** no meio da URL. Use sempre a Production URL exibida no n8n.
 
-Autenticação: **não implementada** (Etapa 4).
+> Paths únicos são obrigatórios no n8n - rotas da Etapa 2 usam prefixos (`remover`, `atualizar-status`, `adicionar-interacao`) para não conflitar com GET da Etapa 1.
+
+## Autenticação (Etapa 4)
+
+Todas as rotas exigem header `Authorization: Bearer <access_token>`, **exceto** `POST /auth/login`.
+
+| Código HTTP | `codigo` | Quando |
+|-------------|----------|--------|
+| 401 | `CREDENCIAIS_INVALIDAS` | E-mail ou senha incorretos no login |
+| 401 | `TOKEN_INVALIDO` | Token ausente, expirado ou assinatura inválida |
+
+O token é JWT HS256 gerado no n8n (chave `jwt_secret` na tabela `app_config` do Postgres). Payload: `sub` (id do agente), `email`, `nome`, `exp`.
 
 Contrato OpenAPI: [`openapi.yaml`](openapi.yaml)
+
+---
+
+## Auth
+
+### POST /auth/login
+
+**Workflow:** `POST_Auth_Login.json` (rota **pública**)
+
+Autentica um agente Bold e retorna JWT.
+
+**Body (JSON):**
+
+```json
+{
+  "email": "agente@bold.com",
+  "senha": "Bold@2026"
+}
+```
+
+| Campo | Obrigatório | Regras |
+|-------|-------------|--------|
+| `email` | Sim | Formato e-mail válido |
+| `senha` | Sim | Não vazio |
+
+**200 - Sucesso:**
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "expires_in": 3600,
+  "agente": {
+    "id": "uuid",
+    "nome": "Agente Teste",
+    "email": "agente@bold.com"
+  }
+}
+```
+
+**401 - Credenciais inválidas:**
+
+```json
+{
+  "erro": "Credenciais inválidas",
+  "codigo": "CREDENCIAIS_INVALIDAS"
+}
+```
+
+**400 - Validação:**
+
+```json
+{
+  "erro": "Email inválido",
+  "codigo": "EMAIL_INVALIDO"
+}
+```
+
+---
 
 ## Formato de erro
 
@@ -67,7 +142,7 @@ Cadastra um novo cliente.
 | `email` | Sim | Formato e-mail válido |
 | `telefone` | Sim | Não vazio |
 
-**201 — Sucesso:**
+**201 - Sucesso:**
 
 ```json
 {
@@ -79,7 +154,7 @@ Cadastra um novo cliente.
 }
 ```
 
-**400 — Erros:**
+**400 - Erros:**
 
 | codigo | Condição |
 |--------|----------|
@@ -95,7 +170,7 @@ Cadastra um novo cliente.
 
 Lista todos os clientes cadastrados, ordenados por `criado_em` DESC.
 
-**200 — Sucesso:**
+**200 - Sucesso:**
 
 ```json
 {
@@ -114,19 +189,21 @@ Lista todos os clientes cadastrados, ordenados por `criado_em` DESC.
 
 ---
 
-### GET /clientes/:id
+### GET /clientes/id/:id
 
 **Workflow:** `GET_Cliente_por_ID.json`
 
 Retorna dados de um cliente pelo UUID.
 
-**Exemplo:** `GET /clientes/18695f4c-43be-4646-83dd-98c55ca9c90f`
+> Path `clientes/id/:id` evita conflito com `GET /clientes` (listagem) no n8n.
 
-**200 — Sucesso:** objeto `Cliente` (mesmos campos do POST).
+**Exemplo:** `GET /clientes/id/18695f4c-43be-4646-83dd-98c55ca9c90f`
 
-**400:** `ID_INVALIDO` — UUID malformado.
+**200 - Sucesso:** objeto `Cliente` (mesmos campos do POST).
 
-**404:** `CLIENTE_NAO_ENCONTRADO` — UUID válido, cliente inexistente.
+**400:** `ID_INVALIDO` - UUID malformado.
+
+**404:** `CLIENTE_NAO_ENCONTRADO` - UUID válido, cliente inexistente.
 
 ---
 
@@ -136,7 +213,7 @@ Retorna dados de um cliente pelo UUID.
 
 Remove um cliente **somente se não houver tickets vinculados** (`ON DELETE RESTRICT`).
 
-**200 — Sucesso:**
+**200 - Sucesso:**
 
 ```json
 {
@@ -160,11 +237,13 @@ Remove um cliente **somente se não houver tickets vinculados** (`ON DELETE REST
 
 ## Tickets
 
-### POST /tickets
+### POST /tickets/criar
 
 **Workflow:** `POST_Tickets.json`
 
-Cria ticket vinculado a um cliente. Gera protocolo `TKT-YYYYMMDD-XXXX`, status `aberto` e uma interação automática do tipo `sistema`.
+Cria ticket vinculado a um cliente.
+
+> Path `tickets/criar` evita conflito com o webhook legado em `tickets` (workflow antigo inacessível na instância). Gera protocolo `TKT-YYYYMMDD-XXXX`, status `aberto` e uma interação automática do tipo `sistema`.
 
 **Body (JSON):**
 
@@ -184,9 +263,9 @@ Cria ticket vinculado a um cliente. Gera protocolo `TKT-YYYYMMDD-XXXX`, status `
 | `descricao` | Sim | Não vazio |
 | `prioridade` | Não | `baixa`, `media`, `alta` (default: `media`) |
 
-**201 — Sucesso:** objeto ticket completo (`id`, `protocolo`, `cliente_id`, `titulo`, `descricao`, `prioridade`, `status`, `criado_em`, `atualizado_em`).
+**201 - Sucesso:** objeto ticket completo (`id`, `protocolo`, `cliente_id`, `titulo`, `descricao`, `prioridade`, `status`, `criado_em`, `atualizado_em`).
 
-**400 — Erros:**
+**400 - Erros:**
 
 | codigo | Condição |
 |--------|----------|
@@ -195,22 +274,24 @@ Cria ticket vinculado a um cliente. Gera protocolo `TKT-YYYYMMDD-XXXX`, status `
 | `DESCRICAO_OBRIGATORIA` | Descrição vazia |
 | `PRIORIDADE_INVALIDA` | Valor fora do enum |
 
-**404:** `CLIENTE_NAO_ENCONTRADO` — cliente_id não existe no banco.
+**404:** `CLIENTE_NAO_ENCONTRADO` - cliente_id não existe no banco.
 
 ---
 
-### GET /tickets
+### GET /tickets/listar
 
 **Workflow:** `GET_Tickets.json`
 
 Lista tickets com **ao menos um** filtro na query string.
 
+> Path `tickets/listar` evita conflito com `POST /tickets/criar` no n8n.
+
 **Exemplos:**
 
 ```
-GET /tickets?status=aberto
-GET /tickets?prioridade=alta
-GET /tickets?status=aberto&prioridade=alta
+GET /tickets/listar?status=aberto
+GET /tickets/listar?prioridade=alta
+GET /tickets/listar?status=aberto&prioridade=alta
 ```
 
 | Query | Valores |
@@ -218,7 +299,7 @@ GET /tickets?status=aberto&prioridade=alta
 | `status` | `aberto`, `em_atendimento`, `aguardando_cliente`, `resolvido`, `cancelado` |
 | `prioridade` | `baixa`, `media`, `alta` |
 
-**200 — Sucesso:**
+**200 - Sucesso:**
 
 ```json
 {
@@ -240,7 +321,7 @@ GET /tickets?status=aberto&prioridade=alta
 }
 ```
 
-**400 — Erros:**
+**400 - Erros:**
 
 | codigo | Condição |
 |--------|----------|
@@ -250,13 +331,17 @@ GET /tickets?status=aberto&prioridade=alta
 
 ---
 
-### GET /tickets/:id
+### GET /tickets/id/:id
 
 **Workflow:** `GET_Ticket_por_ID.json`
 
 Retorna ticket com array `interacoes` ordenado por `criado_em` ASC.
 
-**200 — Sucesso:**
+> Path `tickets/id/:id` evita conflito com `POST /tickets/criar` e `GET /tickets/listar` no n8n.
+
+**Exemplo:** `GET /tickets/id/92845250-3a28-4821-9df1-8f3fdca47377`
+
+**200 - Sucesso:**
 
 ```json
 {
@@ -293,7 +378,7 @@ Retorna ticket com array `interacoes` ordenado por `criado_em` ASC.
 
 Remove o ticket e suas interações (`ON DELETE CASCADE`). Dispara webhook externo com evento `ticket_excluido`.
 
-**200 — Sucesso:**
+**200 - Sucesso:**
 
 ```json
 {
@@ -327,7 +412,7 @@ Atualiza o status do ticket com validação de transições permitidas. Registra
 }
 ```
 
-**200 — Sucesso:** objeto `Ticket` atualizado.
+**200 - Sucesso:** objeto `Ticket` atualizado.
 
 | HTTP | codigo | Condição |
 |------|--------|----------|
@@ -344,8 +429,8 @@ Atualiza o status do ticket com validação de transições permitidas. Registra
 | `aberto` | `em_atendimento`, `cancelado` |
 | `em_atendimento` | `aguardando_cliente`, `resolvido`, `cancelado` |
 | `aguardando_cliente` | `em_atendimento`, `resolvido`, `cancelado` |
-| `resolvido` | — (terminal) |
-| `cancelado` | — (terminal) |
+| `resolvido` | - (terminal) |
+| `cancelado` | - (terminal) |
 
 ---
 
@@ -369,7 +454,7 @@ Adiciona mensagem ao histórico do ticket. Atualiza `atualizado_em` do ticket. D
 | `tipo` | Sim | `cliente` ou `agente` |
 | `mensagem` | Sim | Não vazio |
 
-**201 — Sucesso:** objeto `Interacao` criado.
+**201 - Sucesso:** objeto `Interacao` criado.
 
 | HTTP | codigo | Condição |
 |------|--------|----------|
@@ -408,9 +493,14 @@ Configure a URL em `WEBHOOK_EXTERNO_URL` (ex.: [webhook.site](https://webhook.si
 
 Arquivos em `postman/`:
 
-- `Bold-Support.postman_collection.json` — rotas da Etapa 2
-- `Bold-Support.postman_environment.json` — `base_url` = `https://dev.boldsolution.com.br/webhook`
+| Arquivo | Uso |
+|---------|-----|
+| `Bold-Support-Etapa-1.postman_collection.json` | Etapa 1 - modo teste (`/webhook-test` + Listen) |
+| `Bold-Support-Etapa-2.postman_collection.json` | Etapa 2 - produção (`/webhook` + webhookId onde aplicável) |
+| `Bold-Support.postman_environment.json` | `base_url`, `cliente_id`, `ticket_id` |
 
-Importe a collection e o environment no Postman. Preencha `cliente_id` e `ticket_id` com UUIDs válidos do banco.
+**Produção:** `base_url` = `https://dev.boldsolution.com.br/webhook`
 
-Para modo teste n8n (`/webhook-test`), altere `base_url` e use **Listen for test event** antes de cada request.
+**Teste n8n:** altere `base_url` para `https://dev.boldsolution.com.br/webhook-test` e use **Listen for test event** antes de cada request.
+
+> Algumas rotas usam só o path (`/webhook/clientes`); outras incluem webhookId (`/webhook/bold-get-ticket-id/tickets/id/:id`). Use a tabela de URLs acima ou copie a Production URL de cada workflow no n8n.

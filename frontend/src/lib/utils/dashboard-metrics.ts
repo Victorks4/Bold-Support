@@ -1,5 +1,15 @@
 import type { Ticket } from '@/lib/types/ticket'
 
+export const volumeSemanal = [
+  { label: 'S', value: 12 },
+  { label: 'T', value: 18 },
+  { label: 'Q', value: 15 },
+  { label: 'Q', value: 22 },
+  { label: 'S', value: 19 },
+  { label: 'S', value: 8 },
+  { label: 'D', value: 5 },
+]
+
 export type MetricStat = {
   value: string | number
   delta?: string

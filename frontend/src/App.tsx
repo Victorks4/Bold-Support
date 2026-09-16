@@ -1,5 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from '@/lib/theme/ThemeProvider'
+import { AuthProvider } from '@/lib/auth/AuthContext'
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/components/login/LoginPage'
 import { AppDataProvider } from '@/lib/store/AppDataContext'
@@ -14,20 +16,28 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AppDataProvider>
+        <AuthProvider>
           <Routes>
             <Route path="/" element={<LoginPage />} />
-            <Route element={<AppShell />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/fila" element={<QueuePage />} />
-              <Route path="/chamados" element={<TicketsPage />} />
-              <Route path="/chamados/:id" element={<TicketDetailPage />} />
-              <Route path="/clientes" element={<ClientsPage />} />
-              <Route path="/eventos" element={<EventsPage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route
+                element={
+                  <AppDataProvider>
+                    <AppShell />
+                  </AppDataProvider>
+                }
+              >
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/fila" element={<QueuePage />} />
+                <Route path="/chamados" element={<TicketsPage />} />
+                <Route path="/chamados/:id" element={<TicketDetailPage />} />
+                <Route path="/clientes" element={<ClientsPage />} />
+                <Route path="/eventos" element={<EventsPage />} />
+              </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </AppDataProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   )

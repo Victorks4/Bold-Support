@@ -10,7 +10,7 @@ import { TopBar } from './TopBar'
 export function AppShell() {
   const location = useLocation()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const { isLoading, error, refresh } = useAppData()
+  const { isLoading, error, actionError, clearActionError, refresh } = useAppData()
 
   return (
     <div className="app-shell flex min-h-dvh bg-[#F3F4F6] dark:bg-[#0E121D]">
@@ -29,6 +29,18 @@ export function AppShell() {
               className="shrink-0 font-semibold underline"
             >
               Tentar novamente
+            </button>
+          </div>
+        )}
+        {actionError && (
+          <div className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 sm:mx-6 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+            <span>{actionError}</span>
+            <button
+              type="button"
+              onClick={clearActionError}
+              className="shrink-0 font-semibold underline"
+            >
+              Fechar
             </button>
           </div>
         )}

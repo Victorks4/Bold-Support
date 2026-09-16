@@ -1,4 +1,4 @@
-import { apiFetch, buildWebhookUrl, webhookIds, webhookPaths } from './client'
+import { apiFetch, buildWebhookUrl, webhookPaths } from './client'
 import type { Cliente, ClienteInput } from '@/lib/types/cliente'
 
 type ListClientesResponse = {
@@ -7,18 +7,18 @@ type ListClientesResponse = {
 }
 
 export async function listClientes(): Promise<Cliente[]> {
-  const url = buildWebhookUrl(webhookIds.getClientes, webhookPaths.getClientes)
+  const url = buildWebhookUrl(webhookPaths.getClientes)
   const data = await apiFetch<ListClientesResponse>(url)
   return data.clientes ?? []
 }
 
 export async function getCliente(id: string): Promise<Cliente> {
-  const url = buildWebhookUrl(webhookIds.getCliente, webhookPaths.getCliente(id))
+  const url = buildWebhookUrl(webhookPaths.getCliente(id))
   return apiFetch<Cliente>(url)
 }
 
 export async function createCliente(input: ClienteInput): Promise<Cliente> {
-  const url = buildWebhookUrl(webhookIds.postClientes, webhookPaths.postClientes)
+  const url = buildWebhookUrl(webhookPaths.postClientes)
   return apiFetch<Cliente>(url, {
     method: 'POST',
     body: JSON.stringify(input),
@@ -26,6 +26,6 @@ export async function createCliente(input: ClienteInput): Promise<Cliente> {
 }
 
 export async function deleteCliente(id: string): Promise<void> {
-  const url = buildWebhookUrl(webhookIds.deleteCliente, webhookPaths.deleteCliente(id))
+  const url = buildWebhookUrl(webhookPaths.deleteCliente(id))
   await apiFetch(url, { method: 'DELETE' })
 }

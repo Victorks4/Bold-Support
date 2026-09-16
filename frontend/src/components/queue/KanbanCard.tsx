@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 type KanbanCardProps = {
   ticket: Ticket
   clienteNome: string
-  onStatusChange?: (ticketId: string, status: TicketStatus) => void
+  onStatusChange?: (ticketId: string, status: TicketStatus) => void | Promise<void>
   draggable?: boolean
   isDragging?: boolean
   onDragStart?: () => void
@@ -106,7 +106,7 @@ export function KanbanCard({
                   type="button"
                   onClick={(e) => {
                     e.preventDefault()
-                    onStatusChange(ticket.id, s)
+                    void onStatusChange(ticket.id, s)
                     setMenuOpen(false)
                   }}
                   className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
