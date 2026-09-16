@@ -1,0 +1,19 @@
+# Teste local antes de subir no Railway:
+#   cd deploy/n8n
+#   cp .env.example .env
+#   docker compose up -d
+#   http://localhost:5678
+
+services:
+  n8n:
+    build: .
+    ports:
+      - "5678:5678"
+    env_file:
+      - .env
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
