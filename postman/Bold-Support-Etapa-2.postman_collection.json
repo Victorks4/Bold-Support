@@ -1,0 +1,274 @@
+{
+  "info": {
+    "_postman_id": "a95d5c92-90e1-4f39-aff9-a3a6f3b799d2",
+    "name": "Bold Support - Etapa 2",
+    "description": "Rotas da Etapa 2: DELETE cliente/ticket, PATCH status e POST interações.\n\n**Antes de cada request:** abra o workflow correspondente no n8n → `Webhook_1` → **Listen for test event**.\n\nVariáveis necessárias no environment: `base_url`, `cliente_id`, `ticket_id`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49211461",
+    "_collection_link": "https://go.postman.co/collection/49211461-a95d5c92-90e1-4f39-aff9-a3a6f3b799d2?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "PATCH - Atualizar status do ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Retorna ticket atualizado', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('status');",
+              "    pm.expect(json).to.have.property('protocolo');",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"em_atendimento\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://dev.boldsolution.com.br/webhook/bold-patch-ticket-status/tickets/atualizar-status/15d4deb8-9321-4bf5-9314-e9a5b36339f9",
+          "protocol": "https",
+          "host": [
+            "dev",
+            "boldsolution",
+            "com",
+            "br"
+          ],
+          "path": [
+            "webhook",
+            "bold-patch-ticket-status",
+            "tickets",
+            "atualizar-status",
+            "15d4deb8-9321-4bf5-9314-e9a5b36339f9"
+          ]
+        },
+        "description": "Workflow: `PATCH_Ticket_Status.json`\n\nTransições a partir de `aberto`: `em_atendimento`, `cancelado`.\n\n**Erros comuns:**\n- `400 STATUS_IGUAL` — mesmo status atual\n- `400 TRANSICAO_INVALIDA` — transição não permitida\n- `404 TICKET_NAO_ENCONTRADO`"
+      },
+      "response": []
+    },
+    {
+      "name": "POST - Adicionar interação ao ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Retorna interação criada', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('id');",
+              "    pm.expect(json).to.have.property('tipo');",
+              "    pm.expect(json).to.have.property('mensagem');",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"cliente\",\n  \"mensagem\": \"Enviei o comprovante por e-mail para análise.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://dev.boldsolution.com.br/webhook/bold-post-ticket-interacao/tickets/adicionar-interacao/15d4deb8-9321-4bf5-9314-e9a5b36339f9",
+          "protocol": "https",
+          "host": [
+            "dev",
+            "boldsolution",
+            "com",
+            "br"
+          ],
+          "path": [
+            "webhook",
+            "bold-post-ticket-interacao",
+            "tickets",
+            "adicionar-interacao",
+            "15d4deb8-9321-4bf5-9314-e9a5b36339f9"
+          ]
+        },
+        "description": "Workflow: `POST_Ticket_Interacao.json`\n\nTipos permitidos: `cliente`, `agente`.\n\n**Erros comuns:**\n- `400 TIPO_INVALIDO`\n- `400 MENSAGEM_OBRIGATORIA`\n- `404 TICKET_NAO_ENCONTRADO`"
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE - Remover ticket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Confirma remoção', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('mensagem');",
+              "    pm.expect(json).to.have.property('ticket');",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "https://dev.boldsolution.com.br/webhook/bold-delete-ticket/tickets/remover/92845250-3a28-4821-9df1-8f3fdca47377",
+          "protocol": "https",
+          "host": [
+            "dev",
+            "boldsolution",
+            "com",
+            "br"
+          ],
+          "path": [
+            "webhook",
+            "bold-delete-ticket",
+            "tickets",
+            "remover",
+            "92845250-3a28-4821-9df1-8f3fdca47377"
+          ]
+        },
+        "description": "Workflow: `DELETE_Ticket_por_ID.json`\n\nRemove o ticket e interações (CASCADE). Dispara webhook externo `ticket_excluido`.\n\n**Erros comuns:**\n- `400 ID_INVALIDO`\n- `404 TICKET_NAO_ENCONTRADO`"
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE - Remover cliente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 ou 409', function () {",
+              "    pm.expect([200, 409]).to.include(pm.response.code);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    pm.test('Cliente removido', function () {",
+              "        const json = pm.response.json();",
+              "        pm.expect(json).to.have.property('mensagem');",
+              "        pm.expect(json).to.have.property('cliente');",
+              "    });",
+              "}",
+              "",
+              "if (pm.response.code === 409) {",
+              "    pm.test('Conflito — cliente com tickets', function () {",
+              "        const json = pm.response.json();",
+              "        pm.expect(json.codigo).to.eql('CLIENTE_POSSUI_TICKETS');",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "https://dev.boldsolution.com.br/webhook/bold-delete-cliente/clientes/remover/18695f4c-43be-4646-83dd-98c55ca9c90f",
+          "protocol": "https",
+          "host": [
+            "dev",
+            "boldsolution",
+            "com",
+            "br"
+          ],
+          "path": [
+            "webhook",
+            "bold-delete-cliente",
+            "clientes",
+            "remover",
+            "18695f4c-43be-4646-83dd-98c55ca9c90f"
+          ]
+        },
+        "description": "Workflow: `DELETE_Cliente_por_ID.json`\n\nSó remove se o cliente **não** tiver tickets vinculados.\n\n**Ordem sugerida:** execute o DELETE ticket antes deste.\n\n**Erros comuns:**\n- `400 ID_INVALIDO`\n- `404 CLIENTE_NAO_ENCONTRADO`\n- `409 CLIENTE_POSSUI_TICKETS` — ainda existem tickets"
+      },
+      "response": []
+    },
+    {
+      "name": "GET - Listar Clientes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://dev.boldsolution.com.br/webhook/clientes",
+          "protocol": "https",
+          "host": [
+            "dev",
+            "boldsolution",
+            "com",
+            "br"
+          ],
+          "path": [
+            "webhook",
+            "clientes"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://dev.boldsolution.com.br/webhook-test"
+    },
+    {
+      "key": "cliente_id",
+      "value": ""
+    },
+    {
+      "key": "ticket_id",
+      "value": ""
+    }
+  ]
+}

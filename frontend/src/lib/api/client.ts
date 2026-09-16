@@ -1,22 +1,30 @@
 /**
  * Cliente HTTP para workflows n8n.
- * URLs de produção: {VITE_N8N_WEBHOOK_BASE_URL}/{path}
- * (path = campo Path do node Webhook_1, sem webhookId no meio)
+ * URLs de produção: {base}/{path} ou {base}/{webhookId}/{path}
+ * Copie a Production URL de cada workflow no n8n — formatos podem variar por rota.
  */
 
 const baseUrl = import.meta.env.VITE_N8N_WEBHOOK_BASE_URL ?? '/webhook'
 
+function webhookPath(path: string, webhookId?: string): string {
+  const normalized = path.replace(/^\//, '')
+  return webhookId ? `${webhookId}/${normalized}` : normalized
+}
+
 export const webhookPaths = {
-  postClientes: 'clientes',
-  getClientes: 'clientes',
-  getCliente: (id: string) => `clientes/id/${id}`,
-  deleteCliente: (id: string) => `clientes/remover/${id}`,
-  postTickets: 'tickets',
-  getTickets: 'tickets/listar',
-  getTicket: (id: string) => `tickets/id/${id}`,
-  deleteTicket: (id: string) => `tickets/remover/${id}`,
-  patchTicketStatus: (id: string) => `tickets/atualizar-status/${id}`,
-  postInteracao: (id: string) => `tickets/adicionar-interacao/${id}`,
+  postClientes: webhookPath('clientes'),
+  getClientes: webhookPath('clientes'),
+  getCliente: (id: string) => webhookPath(`clientes/id/${id}`),
+  deleteCliente: (id: string) => webhookPath(`clientes/remover/${id}`, 'bold-delete-cliente'),
+  postTickets: webhookPath('tickets/criar'),
+  getTickets: webhookPath('tickets/listar'),
+  // Esta instância registra GET por ID com webhookId no meio da URL (ver node Webhook no n8n).
+  getTicket: (id: string) => webhookPath(`tickets/id/${id}`, 'bold-get-ticket-id'),
+  deleteTicket: (id: string) => webhookPath(`tickets/remover/${id}`, 'bold-delete-ticket'),
+  patchTicketStatus: (id: string) =>
+    webhookPath(`tickets/atualizar-status/${id}`, 'bold-patch-ticket-status'),
+  postInteracao: (id: string) =>
+    webhookPath(`tickets/adicionar-interacao/${id}`, 'bold-post-ticket-interacao'),
 } as const
 
 export class ApiError extends Error {
@@ -53,7 +61,12 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
       ? (JSON.parse(text) as T & { erro?: string; codigo?: string; message?: string })
       : ({} as T & { erro?: string; codigo?: string; message?: string })
   } catch {
-    throw new ApiError(text || 'Resposta inválida da API', 'RESPOSTA_INVALIDA', response.status)
+    const trimmed = text.trim()
+    const isHtml = /^<!DOCTYPE html|^<html/i.test(trimmed)
+    const message = isHtml
+      ? 'Erro interno no n8n. Reimporte o workflow e confira a Production URL.'
+      : trimmed || 'Resposta inválida da API'
+    throw new ApiError(message, 'RESPOSTA_INVALIDA', response.status)
   }
 
   if (!response.ok) {

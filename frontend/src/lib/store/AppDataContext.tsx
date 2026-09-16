@@ -233,15 +233,26 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }
   }, [clearActionError])
 
-  const loadTicketDetail = useCallback(async (ticketId: string) => {
-    const ticket = await ticketsApi.getTicket(ticketId)
-    setTickets((prev) => {
-      const exists = prev.some((t) => t.id === ticketId)
-      if (!exists) return sortByPrioridade([ticket, ...prev])
-      return prev.map((t) => (t.id === ticketId ? ticket : t))
-    })
-    return ticket
-  }, [])
+  const loadTicketDetail = useCallback(
+    async (ticketId: string) => {
+      clearActionError()
+      try {
+        const ticket = await ticketsApi.getTicket(ticketId)
+        setTickets((prev) => {
+          const exists = prev.some((t) => t.id === ticketId)
+          if (!exists) return sortByPrioridade([ticket, ...prev])
+          return prev.map((t) => (t.id === ticketId ? ticket : t))
+        })
+        return ticket
+      } catch (err) {
+        const message =
+          err instanceof ApiError ? err.message : 'Não foi possível carregar o chamado.'
+        setActionError(message)
+        return undefined
+      }
+    },
+    [clearActionError],
+  )
 
   const updateTicketStatus = useCallback(
     async (ticketId: string, status: TicketStatus) => {

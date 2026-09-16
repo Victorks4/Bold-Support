@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "tickets",
+        "path": "tickets/criar",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -13,7 +13,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [0, 300],
-      "webhookId": "bold-post-tickets"
+      "webhookId": "bold-post-tickets-criar"
     },
     {
       "parameters": {

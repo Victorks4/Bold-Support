@@ -2,11 +2,11 @@ openapi: 3.0.3
 info:
   title: Bold Support API
   description: API de chamados — backend em n8n (webhooks) + PostgreSQL (Supabase)
-  version: 2.0.0
+  version: 2.1.0
 
 servers:
   - url: https://dev.boldsolution.com.br/webhook
-    description: n8n — produção (workflows ativos; URL inclui webhookId por rota)
+    description: n8n — produção (paths lógicos; algumas rotas usam webhookId no path real — ver docs/api.md)
   - url: https://dev.boldsolution.com.br/webhook-test
     description: n8n — teste (Listen for test event)
 
@@ -114,7 +114,7 @@ paths:
         '400':
           $ref: '#/components/responses/ErroValidacao'
 
-  /tickets:
+  /tickets/criar:
     post:
       summary: Criar ticket
       tags: [Tickets]

@@ -109,41 +109,59 @@
     },
     {
       "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst esc = (v) => String(v).replace(/'/g, \"''\");\nconst query = `UPDATE tickets SET status = '${esc(d.novo_status)}', atualizado_em = now() WHERE id = '${d.id}'::uuid RETURNING id, protocolo, cliente_id, titulo, descricao, prioridade, status, criado_em, atualizado_em`;\nreturn [{ json: { query } }];"
+      },
+      "id": "code-montar-update",
+      "name": "Montar_update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 0]
+    },
+    {
+      "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE tickets SET status = $2, atualizado_em = now() WHERE id = $1::uuid RETURNING id, protocolo, cliente_id, titulo, descricao, prioridade, status, criado_em, atualizado_em;",
-        "options": {
-          "queryReplacement": "={{ $json.id }},{{ $json.novo_status }}"
-        }
+        "query": "={{ $json.query }}",
+        "options": {}
       },
       "id": "postgres-atualizar-status",
       "name": "Atualizar_status",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [1540, 0]
+      "position": [1760, 0],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "const ticket = $('Atualizar_status').first().json;\nconst anterior = $('Validar_transicao').first().json.status_anterior;\n\nreturn [{ json: {\n  ticket_id: ticket.id,\n  mensagem: `Status alterado de ${anterior} para ${ticket.status}.`\n} }];"
+        "jsCode": "const ticket = $('Atualizar_status').first().json;\nconst anterior = $('Validar_transicao').first().json.status_anterior;\n\nif (!ticket?.id) {\n  return [{ json: {\n    erro: 'Falha ao atualizar status no banco',\n    codigo: 'ERRO_ATUALIZACAO',\n    http_status: 500\n  } }];\n}\n\nreturn [{ json: {\n  ticket_id: ticket.id,\n  mensagem: `Status alterado de ${anterior} para ${ticket.status}.`\n} }];"
       },
       "id": "code-montar-mensagem",
       "name": "Montar_mensagem",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1760, 0]
+      "position": [1980, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst esc = (v) => String(v).replace(/'/g, \"''\");\nconst query = `INSERT INTO interacoes (ticket_id, tipo, mensagem) VALUES ('${d.ticket_id}'::uuid, 'sistema', '${esc(d.mensagem)}')`;\nreturn [{ json: { query } }];"
+      },
+      "id": "code-montar-interacao",
+      "name": "Montar_interacao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 0]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO interacoes (ticket_id, tipo, mensagem) VALUES ($1::uuid, 'sistema', $2);",
-        "options": {
-          "queryReplacement": "={{ $json.ticket_id }},{{ $json.mensagem }}"
-        }
+        "query": "={{ $json.query }}",
+        "options": {}
       },
       "id": "postgres-interacao-sistema",
       "name": "Interacao_sistema",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [1980, 0]
+      "position": [2420, 0],
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -158,7 +176,7 @@
       "name": "Webhook_externo",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2200, 0],
+      "position": [2640, 0],
       "continueOnFail": true
     },
     {
@@ -171,7 +189,7 @@
       "name": "Responde_200",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [2420, 0]
+      "position": [2860, 0]
     },
     {
       "parameters": {
@@ -229,12 +247,14 @@
     },
     "Transicao_valida?": {
       "main": [
-        [{ "node": "Atualizar_status", "type": "main", "index": 0 }],
+        [{ "node": "Montar_update", "type": "main", "index": 0 }],
         [{ "node": "Responde_400_transicao", "type": "main", "index": 0 }]
       ]
     },
+    "Montar_update": { "main": [[{ "node": "Atualizar_status", "type": "main", "index": 0 }]] },
     "Atualizar_status": { "main": [[{ "node": "Montar_mensagem", "type": "main", "index": 0 }]] },
-    "Montar_mensagem": { "main": [[{ "node": "Interacao_sistema", "type": "main", "index": 0 }]] },
+    "Montar_mensagem": { "main": [[{ "node": "Montar_interacao", "type": "main", "index": 0 }]] },
+    "Montar_interacao": { "main": [[{ "node": "Interacao_sistema", "type": "main", "index": 0 }]] },
     "Interacao_sistema": { "main": [[{ "node": "Webhook_externo", "type": "main", "index": 0 }]] },
     "Webhook_externo": { "main": [[{ "node": "Responde_200", "type": "main", "index": 0 }]] }
   },

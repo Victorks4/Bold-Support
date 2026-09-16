@@ -57,6 +57,7 @@ Verifique as tabelas: `clientes`, `tickets`, `interacoes`.
 1. Acesse a instância n8n.
 2. **Import from File** para cada JSON em `n8n/workflows/`:
    - `POST_Clientes.json`
+   - `GET_Clientes.json`
    - `GET_Cliente_por_ID.json`
    - `DELETE_Cliente_por_ID.json`
    - `POST_Tickets.json`
@@ -96,12 +97,15 @@ https://dev.boldsolution.com.br/webhook-test/<rota>
 
 ### Postman (produção)
 
-1. Importe `postman/Bold-Support.postman_collection.json` e `postman/Bold-Support.postman_environment.json`.
-2. Ative o environment **Bold Support — Produção**.
-3. Preencha `cliente_id` e `ticket_id` (crie via workflows da Etapa 1 se necessário).
-4. **Etapa 2** — ordem sugerida: PATCH status → POST interação → DELETE ticket → DELETE cliente (sem tickets).
+1. Importe:
+   - `postman/Bold-Support-Etapa-1.postman_collection.json` (rotas básicas — modo teste)
+   - `postman/Bold-Support-Etapa-2.postman_collection.json` (DELETE, PATCH, interações — produção)
+   - `postman/Bold-Support.postman_environment.json`
+2. Ative o environment **Bold Support — Produção** (`base_url` = `https://dev.boldsolution.com.br/webhook`).
+3. Preencha `cliente_id` e `ticket_id` com UUIDs válidos.
+4. Ordem sugerida Etapa 2: PATCH status → POST interação → DELETE ticket → DELETE cliente (sem tickets).
 
-> URLs da collection usam o formato da instância Bold: `/webhook/{webhookId}/{path}`. Copie a Production URL do node `Webhook_1` no n8n para validar.
+> Na instância Bold, algumas rotas usam só o path (`/webhook/clientes`) e outras incluem `webhookId` (`/webhook/bold-get-ticket-id/tickets/id/:id`). Tabela completa em `docs/api.md`.
 
 ### Webhook externo (Etapa 2)
 
@@ -111,7 +115,7 @@ https://dev.boldsolution.com.br/webhook-test/<rota>
 
 ## 7. Produção
 
-Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo** na instância n8n. Na instância Bold, a URL de produção inclui o `webhookId` de cada workflow (ver `docs/api.md`).
+Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo** na instância n8n. Copie a **Production URL** de cada node `Webhook_1` — o formato pode variar (path simples ou com `webhookId` no meio). Ver `docs/api.md`.
 
 ## 8. Solução de problemas
 
@@ -125,7 +129,7 @@ Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo*
 
 ## 9. Frontend (Etapa 3)
 
-O console do agente está em `frontend/`. Dados mock em memória — não requer banco nem n8n para rodar localmente.
+O console do agente está em `frontend/` e consome a API n8n em produção via proxy Vite.
 
 ```bash
 cd frontend
@@ -138,9 +142,10 @@ npm run dev       # http://localhost:5173
 
 | Variável | Descrição |
 |----------|-----------|
-| `VITE_N8N_WEBHOOK_BASE_URL` | Base URL dos webhooks n8n (integração futura) |
+| `VITE_N8N_WEBHOOK_BASE_URL` | Base dos webhooks (`/webhook` — proxy para `dev.boldsolution.com.br`) |
+| `VITE_WEBHOOK_SITE_TOKEN` | (Opcional) UUID do webhook.site para sincronizar eventos em `/eventos` |
 
-Os IDs dos workflows (`VITE_WEBHOOK_ID_*`) estão comentados em `frontend/.env.example` — ativar quando conectar a API real.
+Os `webhookId` por rota estão mapeados em `frontend/src/lib/api/client.ts` conforme a instância Bold.
 
 ### Scripts disponíveis
 
@@ -153,11 +158,13 @@ Os IDs dos workflows (`VITE_WEBHOOK_ID_*`) estão comentados em `frontend/.env.e
 
 ### Fluxo de teste do frontend
 
-1. Acesse `http://localhost:5173`
-2. Na tela de login, clique em **Entrar** (auth mock — qualquer credencial)
-3. Navegue pelo dashboard, fila kanban, chamados, clientes e eventos
-4. Cadastre um cliente em `/clientes` e abra um chamado
-5. Mova cards no kanban em `/fila` e verifique eventos simulados em `/eventos`
+1. Garanta workflows **ativos** no n8n (produção `/webhook`)
+2. Acesse `http://localhost:5173`
+3. Na tela de login, clique em **Entrar** (auth mock — qualquer credencial)
+4. Verifique clientes e tickets carregados (bootstrap via API)
+5. Cadastre cliente e abra chamado em `/clientes`
+6. Mova cards no kanban em `/fila` e altere status no detalhe do chamado
+7. Confira eventos em `/eventos` (mutações locais + webhook.site se configurado)
 
 Documentação detalhada: [`frontend/README.md`](../frontend/README.md)
 

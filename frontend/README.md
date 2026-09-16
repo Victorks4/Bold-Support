@@ -31,7 +31,7 @@ Login em `/` → **Entrar** leva ao dashboard (mock, sem auth real — Etapa 4).
 | `/chamados` | Lista completa com filtros |
 | `/chamados/:id` | Detalhe + timeline de interações |
 | `/clientes` | Cadastro de cliente + abrir chamado |
-| `/eventos` | Log simulado de webhooks n8n |
+| `/eventos` | Log de eventos (mutações API + webhook.site opcional) |
 
 ## Estrutura de pastas
 
@@ -56,9 +56,8 @@ frontend/src/
 │   ├── motion/             # PageTransition
 │   └── ui/                 # Button, Input, Select, Card, Badge...
 ├── lib/
-│   ├── store/              # AppDataContext (estado global mock)
-│   ├── mocks/              # Dados iniciais (tickets, clientes, eventos)
-│   ├── api/                # client.ts — stub para n8n
+│   ├── store/              # AppDataContext (estado + API n8n)
+│   ├── api/                # client.ts, clientes.ts, tickets.ts, webhook-site.ts
 │   ├── types/              # Cliente, Ticket, WebhookEvento
 │   ├── utils/              # dashboard-metrics, kanban-dnd, time
 │   ├── theme/              # ThemeProvider (claro/escuro)
@@ -96,13 +95,20 @@ Constantes em `src/lib/assets.ts`.
 
 O **agente** cadastra clientes e abre chamados em nome deles. Não há portal self-service para o cliente final. Interações tipo `cliente` representam o que foi dito por outros canais (e-mail, telefone, etc.).
 
-## Dados mock
+## Integração n8n
 
-Estado em memória via `AppDataContext`. Ações geram logs em `logger.ts` e eventos simulados em `/eventos`. Métricas do dashboard são calculadas a partir dos tickets em `lib/utils/dashboard-metrics.ts`.
+`AppDataContext` carrega clientes e tickets da API no bootstrap (`Promise.allSettled`). Mutations (criar cliente/ticket, status, interação) chamam os workflows n8n via `lib/api/`.
 
-### Integração futura n8n
+### Variáveis de ambiente
 
-Stub em `src/lib/api/client.ts` com paths dos webhooks. Configurar `VITE_N8N_WEBHOOK_BASE_URL` e IDs dos workflows em `.env.example`. A função `apiFetch` lança erro até a integração ser ativada.
+| Variável | Descrição |
+|----------|-----------|
+| `VITE_N8N_WEBHOOK_BASE_URL` | Base dos webhooks (`/webhook` com proxy Vite em dev) |
+| `VITE_WEBHOOK_SITE_TOKEN` | (Opcional) UUID webhook.site para polling em `/eventos` |
+
+Mapeamento de URLs (path + `webhookId` onde necessário) em `src/lib/api/client.ts`. Copie a Production URL de cada workflow no n8n se algo retornar 404.
+
+Métricas do dashboard: `lib/utils/dashboard-metrics.ts`. Ordenação por prioridade: `lib/utils/ticket-sort.ts`.
 
 ## Motion
 

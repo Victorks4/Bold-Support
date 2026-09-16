@@ -102,7 +102,7 @@ git checkout stage/03-frontend
 | `/chamados` | Lista com filtros |
 | `/chamados/:id` | Detalhe + timeline |
 | `/clientes` | Cadastro + abrir chamado |
-| `/eventos` | Log simulado de webhooks |
+| `/eventos` | Log de eventos (API + webhook.site opcional) |
 
 ### Checklist Etapa 3
 
@@ -120,7 +120,10 @@ git checkout stage/03-frontend
 - [x] Badge contador na Fila (sidebar + mobile nav)
 - [x] Links eventos → chamado no log de webhooks
 - [x] Base de clientes + abrir chamado (fluxo agente via API)
-- [x] Eventos — log local derivado das mutações API (status/interação)
+- [x] Eventos — log local derivado das mutações API + polling webhook.site opcional
+- [x] URLs n8n alinhadas (path simples + webhookId por rota na instância Bold)
+- [x] Workflows POST/PATCH corrigidos (SQL via Code nodes)
+- [x] Postman Etapa 1 e 2 + environment de produção
 - [x] Motion: Framer Motion (páginas, sidebar, timeline, kanban)
 - [x] Tema claro/escuro (`ThemeProvider`, toggle na sidebar)
 - [x] Camada `lib/api` consumindo os 10 workflows n8n (incl. `GET /clientes`)

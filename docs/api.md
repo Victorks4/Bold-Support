@@ -14,18 +14,22 @@ https://dev.boldsolution.com.br/webhook
 https://dev.boldsolution.com.br/webhook-test
 ```
 
-Na instância hospedada, a URL de produção usa o **path** do node `Webhook_1` (sem `webhookId` no meio):
+Na instância hospedada, copie a **Production URL** de cada workflow no node `Webhook_1`. O formato pode variar:
 
-| Workflow | URL de produção |
-|----------|-----------------|
+| Workflow | URL de produção (instância Bold) |
+|----------|----------------------------------|
 | `GET_Clientes.json` | `/webhook/clientes` |
 | `GET_Cliente_por_ID.json` | `/webhook/clientes/id/:id` |
+| `POST_Clientes.json` | `/webhook/clientes` |
+| `POST_Tickets.json` | `/webhook/tickets/criar` |
 | `GET_Tickets.json` | `/webhook/tickets/listar` |
-| `GET_Ticket_por_ID.json` | `/webhook/tickets/id/:id` |
-| `PATCH_Ticket_Status.json` | `/webhook/tickets/atualizar-status/:id` |
-| `POST_Ticket_Interacao.json` | `/webhook/tickets/adicionar-interacao/:id` |
-| `DELETE_Ticket_por_ID.json` | `/webhook/tickets/remover/:id` |
-| `DELETE_Cliente_por_ID.json` | `/webhook/clientes/remover/:id` |
+| `GET_Ticket_por_ID.json` | `/webhook/bold-get-ticket-id/tickets/id/:id` |
+| `PATCH_Ticket_Status.json` | `/webhook/bold-patch-ticket-status/tickets/atualizar-status/:id` |
+| `POST_Ticket_Interacao.json` | `/webhook/bold-post-ticket-interacao/tickets/adicionar-interacao/:id` |
+| `DELETE_Ticket_por_ID.json` | `/webhook/bold-delete-ticket/tickets/remover/:id` |
+| `DELETE_Cliente_por_ID.json` | `/webhook/bold-delete-cliente/clientes/remover/:id` |
+
+> Alguns workflows registram só o **path**; outros incluem o **Webhook ID** no meio da URL. Use sempre a Production URL exibida no n8n.
 
 > Paths únicos são obrigatórios no n8n — rotas da Etapa 2 usam prefixos (`remover`, `atualizar-status`, `adicionar-interacao`) para não conflitar com GET da Etapa 1.
 
@@ -165,11 +169,13 @@ Remove um cliente **somente se não houver tickets vinculados** (`ON DELETE REST
 
 ## Tickets
 
-### POST /tickets
+### POST /tickets/criar
 
 **Workflow:** `POST_Tickets.json`
 
-Cria ticket vinculado a um cliente. Gera protocolo `TKT-YYYYMMDD-XXXX`, status `aberto` e uma interação automática do tipo `sistema`.
+Cria ticket vinculado a um cliente.
+
+> Path `tickets/criar` evita conflito com o webhook legado em `tickets` (workflow antigo inacessível na instância). Gera protocolo `TKT-YYYYMMDD-XXXX`, status `aberto` e uma interação automática do tipo `sistema`.
 
 **Body (JSON):**
 
@@ -210,7 +216,7 @@ Cria ticket vinculado a um cliente. Gera protocolo `TKT-YYYYMMDD-XXXX`, status `
 
 Lista tickets com **ao menos um** filtro na query string.
 
-> Path `tickets/listar` evita conflito com `POST /tickets` no n8n.
+> Path `tickets/listar` evita conflito com `POST /tickets/criar` no n8n.
 
 **Exemplos:**
 
@@ -263,7 +269,7 @@ GET /tickets/listar?status=aberto&prioridade=alta
 
 Retorna ticket com array `interacoes` ordenado por `criado_em` ASC.
 
-> Path `tickets/id/:id` evita conflito com `POST /tickets` e `GET /tickets/listar` no n8n.
+> Path `tickets/id/:id` evita conflito com `POST /tickets/criar` e `GET /tickets/listar` no n8n.
 
 **Exemplo:** `GET /tickets/id/92845250-3a28-4821-9df1-8f3fdca47377`
 
@@ -419,9 +425,14 @@ Configure a URL em `WEBHOOK_EXTERNO_URL` (ex.: [webhook.site](https://webhook.si
 
 Arquivos em `postman/`:
 
-- `Bold-Support.postman_collection.json` — rotas da Etapa 2
-- `Bold-Support.postman_environment.json` — `base_url` = `https://dev.boldsolution.com.br/webhook`
+| Arquivo | Uso |
+|---------|-----|
+| `Bold-Support-Etapa-1.postman_collection.json` | Etapa 1 — modo teste (`/webhook-test` + Listen) |
+| `Bold-Support-Etapa-2.postman_collection.json` | Etapa 2 — produção (`/webhook` + webhookId onde aplicável) |
+| `Bold-Support.postman_environment.json` | `base_url`, `cliente_id`, `ticket_id` |
 
-Importe a collection e o environment no Postman. Preencha `cliente_id` e `ticket_id` com UUIDs válidos do banco.
+**Produção:** `base_url` = `https://dev.boldsolution.com.br/webhook`
 
-Para modo teste n8n (`/webhook-test`), altere `base_url` e use **Listen for test event** antes de cada request.
+**Teste n8n:** altere `base_url` para `https://dev.boldsolution.com.br/webhook-test` e use **Listen for test event** antes de cada request.
+
+> Algumas rotas usam só o path (`/webhook/clientes`); outras incluem webhookId (`/webhook/bold-get-ticket-id/tickets/id/:id`). Use a tabela de URLs acima ou copie a Production URL de cada workflow no n8n.

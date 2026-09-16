@@ -32,8 +32,15 @@ const tipoLabel: Record<InteracaoTipo, string> = {
 export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { getTicketById, getClienteNome, updateTicketStatus, addInteracao, removeTicket, loadTicketDetail, isLoading } =
-    useAppData()
+  const {
+    getTicketById,
+    getClienteNome,
+    updateTicketStatus,
+    addInteracao,
+    removeTicket,
+    loadTicketDetail,
+    isLoading,
+  } = useAppData()
   const ticket = id ? getTicketById(id) : undefined
   const [mensagem, setMensagem] = useState('')
   const [registroCliente, setRegistroCliente] = useState('')
@@ -63,7 +70,11 @@ export function TicketDetailPage() {
   )
 
   async function handleStatusChange(status: TicketStatus) {
-    await updateTicketStatus(ticket!.id, status)
+    try {
+      await updateTicketStatus(ticket!.id, status)
+    } catch {
+      // actionError já definido no AppDataContext
+    }
   }
 
   async function handleSendMessage(e: React.FormEvent) {
