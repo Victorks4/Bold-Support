@@ -10,7 +10,7 @@ npm install
 npm run dev       # http://localhost:5173
 ```
 
-Login em `/` → **Entrar** leva ao dashboard (mock, sem auth real - Etapa 4).
+Login em `/` com autenticação JWT real (Etapa 4).
 
 ## Scripts
 
@@ -20,6 +20,9 @@ Login em `/` → **Entrar** leva ao dashboard (mock, sem auth real - Etapa 4).
 | `npm run build` | Build de produção (TypeScript + Vite) |
 | `npm run lint` | Oxlint |
 | `npm run preview` | Preview do build local |
+| `npm test` | Vitest em modo watch |
+| `npm run test:run` | Vitest uma vez |
+| `npm run test:coverage` | Cobertura de código |
 
 ## Rotas
 

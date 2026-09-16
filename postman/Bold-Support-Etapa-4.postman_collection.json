@@ -39,19 +39,14 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"agente@bold.com\",\n  \"senha\": \"Bold@2026\"\n}"
+          "raw": "{\n  \"email\": \"{{test_agent_email}}\",\n  \"senha\": \"{{test_agent_password}}\"\n}"
         },
         "url": {
-          "raw": "https://dev.boldsolution.com.br/webhook/auth/login",
-          "protocol": "https",
+          "raw": "{{base_url}}/auth/login",
           "host": [
-            "dev",
-            "boldsolution",
-            "com",
-            "br"
+            "{{base_url}}"
           ],
           "path": [
-            "webhook",
             "auth",
             "login"
           ]

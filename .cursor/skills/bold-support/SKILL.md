@@ -13,8 +13,8 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 |------|-------|
 | Repo local | `Bold-Support` |
 | GitHub | `https://github.com/Victorks4/Bold-Support` |
-| Branch estável | `main` (Etapas 1 e 2 entregues) |
-| Branch ativa | `stage/03-frontend` (login Vite) |
+| Branch estável | `main` (Etapas 1–4 entregues) |
+| Branch ativa | `main` |
 | Snapshot Etapa 1 | `stage/01-core-api` (congelada, não alterar) |
 
 **Regra:** trabalhar na branch da etapa em curso; ao concluir, merge em `main`. Detalhes em `docs/entregas.md`.
@@ -25,7 +25,7 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 |--------|------------|-------|
 | Backend | **n8n** (webhooks) | **NÃO usar NestJS** |
 | Banco | PostgreSQL / **Supabase** | Projeto `bold-support`, região `us-west-2` |
-| Testes | Postman | Modo teste n8n |
+| Testes frontend | Vitest + Testing Library | npm run test:frontend |\n| Testes API | Newman (Postman CLI) | npm run test:api |
 | Frontend | React + Vite em `frontend/` | Login implementado; dashboard pendente |
 
 ## Infraestrutura
@@ -126,7 +126,7 @@ Disparar webhook mock em eventos de ticket com campos: `protocolo`, `evento`, `s
 - **Etapa 3b:** Dashboard + integração API
 - **Etapa 4:** Autenticação JWT/OAuth (`stage/04-authentication`)
 
-## Problemas já resolvidos (não repetir)
+## Testes automatizados\n\n- Frontend: Vitest em frontend/src/**/*.test.ts(x)\n- API: Newman via scripts/run-api-tests.mjs\n- Env: .env.test.example\n- Docs: docs/testing.md\n\n## Problemas já resolvidos (não repetir)
 
 | Problema | Solução |
 |----------|---------|
@@ -141,7 +141,7 @@ Disparar webhook mock em eventos de ticket com campos: `protocolo`, `evento`, `s
 ```
 Bold-Support/
 ├── database/migrations/
-├── docs/                    # api, architecture, database, installation, openapi, entregas
+├── docs/                    # api, architecture, database, installation, testing, openapi, entregas
 ├── frontend/                # React + Vite (login)
 ├── n8n/workflows/           # Backend (JSONs exportados)
 ├── .cursor/skills/          # Skills locais (bold-support, project-documentation)
@@ -160,6 +160,7 @@ Bold-Support/
 - `docs/api.md` - endpoints e códigos de erro
 - `docs/architecture.md` - fluxos e diagramas
 - `docs/installation.md` - setup Supabase + n8n + Postman
+- `docs/testing.md` - testes automatizados (Vitest + Newman)
 - `docs/openapi.yaml` - contrato OpenAPI
 
 ## Segurança

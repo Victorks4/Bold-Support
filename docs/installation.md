@@ -212,3 +212,30 @@ Documentação detalhada: [`frontend/README.md`](../frontend/README.md)
 5. No frontend, login real com sessão (`localStorage` se "Lembrar-me", senão `sessionStorage`).
 
 Token expirado durante o uso → API retorna `401 TOKEN_INVALIDO` → logout automático e redirect para `/`.
+
+## 11. Testes automatizados
+
+### Frontend (Vitest — offline)
+
+```bash
+cd frontend
+npm run test:run
+```
+
+### API (Newman — requer n8n ativo)
+
+```bash
+npm install
+cp .env.test.example .env.test
+npm run test:api
+```
+
+### Todos os testes
+
+```bash
+npm install
+cd frontend && npm install && cd ..
+npm test
+```
+
+Guia completo: [**docs/testing.md**](testing.md)

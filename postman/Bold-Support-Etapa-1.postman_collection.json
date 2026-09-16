@@ -43,16 +43,11 @@
               "raw": "{\n  \"nome\": \"Victor S\",\n  \"email\": \"victor.teste.{{$timestamp}}@email.com\",\n  \"telefone\": \"11999998888\"\n}"
             },
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/clientes",
-              "protocol": "https",
+              "raw": "{{base_url}}/clientes",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "clientes"
               ]
             },
@@ -89,16 +84,11 @@
               "raw": "{\n  \"nome\": \"João\",\n  \"email\": \"email-sem-arroba\",\n  \"telefone\": \"11999998888\"\n}"
             },
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/clientes",
-              "protocol": "https",
+              "raw": "{{base_url}}/clientes",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "clientes"
               ]
             }
@@ -134,16 +124,11 @@
               "raw": "{\n  \"nome\": \"João\",\n  \"email\": \"joao@email.com\"\n}"
             },
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/clientes",
-              "protocol": "https",
+              "raw": "{{base_url}}/clientes",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "clientes"
               ]
             }
@@ -179,20 +164,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-cliente/clientes/id/315720fe-647d-48fd-9e14-efbdd66cab98",
-              "protocol": "https",
+              "raw": "{{base_url}}/bold-get-cliente/clientes/id/{{cliente_id}}",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "bold-get-cliente",
                 "clientes",
                 "id",
-                "315720fe-647d-48fd-9e14-efbdd66cab98"
+                "{{cliente_id}}"
               ]
             },
             "description": "Workflow: GET Cliente por ID\nUse cliente_id do POST ou do Supabase."
@@ -219,16 +199,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-cliente/clientes/id/18695f4c-43be-4646-8",
-              "protocol": "https",
+              "raw": "{{base_url}}/bold-get-cliente/clientes/id/18695f4c-43be-4646-8",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "bold-get-cliente",
                 "clientes",
                 "id",
@@ -258,16 +233,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-cliente/clientes/id/00000000-0000-4000-8000-000000000000",
-              "protocol": "https",
+              "raw": "{{base_url}}/bold-get-cliente/clientes/id/00000000-0000-4000-8000-000000000000",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "bold-get-cliente",
                 "clientes",
                 "id",
@@ -317,16 +287,11 @@
               "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"titulo\": \"Erro no login\",\n  \"descricao\": \"Não consigo acessar o sistema agr\",\n  \"prioridade\": \"alta\"\n}"
             },
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/tickets/criar",
-              "protocol": "https",
+              "raw": "{{base_url}}/tickets/criar",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "tickets",
                 "criar"
               ]
@@ -364,17 +329,13 @@
               "raw": "{\n  \"cliente_id\": \"abc123\",\n  \"titulo\": \"Teste\",\n  \"descricao\": \"Teste\"\n}"
             },
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/tickets",
-              "protocol": "https",
+              "raw": "{{base_url}}/tickets/criar",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
-                "tickets"
+                "tickets",
+                "criar"
               ]
             }
           },
@@ -409,17 +370,13 @@
               "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"titulo\": \"Teste\",\n  \"descricao\": \"\"\n}"
             },
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/ticketss",
-              "protocol": "https",
+              "raw": "{{base_url}}/tickets/criar",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
-                "ticketss"
+                "tickets",
+                "criar"
               ]
             }
           },
@@ -454,17 +411,13 @@
               "raw": "{\n  \"cliente_id\": \"00000000-0000-4000-8000-000000000000\",\n  \"titulo\": \"Teste\",\n  \"descricao\": \"Cliente fake\"\n}"
             },
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/ticketss",
-              "protocol": "https",
+              "raw": "{{base_url}}/tickets/criar",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
-                "ticketss"
+                "tickets",
+                "criar"
               ]
             }
           },
@@ -499,16 +452,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar?status=em_atendimento",
-              "protocol": "https",
+              "raw": "{{base_url}}/tickets/listar?status=em_atendimento",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "tickets",
                 "listar"
               ],
@@ -542,16 +490,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar?prioridade=alta",
-              "protocol": "https",
+              "raw": "{{base_url}}/tickets/listar?prioridade=alta",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "tickets",
                 "listar"
               ],
@@ -584,16 +527,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar?status=aberto&prioridade=alta",
-              "protocol": "https",
+              "raw": "{{base_url}}/tickets/listar?status=aberto&prioridade=alta",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "tickets",
                 "listar"
               ],
@@ -631,16 +569,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar",
-              "protocol": "https",
+              "raw": "{{base_url}}/tickets/listar",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "tickets",
                 "listar"
               ]
@@ -668,16 +601,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/tickets/listar?status=fechado",
-              "protocol": "https",
+              "raw": "{{base_url}}/tickets/listar?status=fechado",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "tickets",
                 "listar"
               ],
@@ -720,20 +648,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-ticket-id/tickets/id/92845250-3a28-4821-9df1-8f3fdca47377",
-              "protocol": "https",
+              "raw": "{{base_url}}/bold-get-ticket-id/tickets/id/{{ticket_id}}",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "bold-get-ticket-id",
                 "tickets",
                 "id",
-                "92845250-3a28-4821-9df1-8f3fdca47377"
+                "{{ticket_id}}"
               ]
             },
             "description": "Rode o POST Tickets antes para popular ticket_id."
@@ -760,16 +683,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-ticket-id/tickets/id/abc123",
-              "protocol": "https",
+              "raw": "{{base_url}}/bold-get-ticket-id/tickets/id/abc123",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "bold-get-ticket-id",
                 "tickets",
                 "id",
@@ -799,16 +717,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://dev.boldsolution.com.br/webhook/bold-get-ticket-id/tickets/id/00000000-0000-4000-8000-000000000000",
-              "protocol": "https",
+              "raw": "{{base_url}}/bold-get-ticket-id/tickets/id/00000000-0000-4000-8000-000000000000",
               "host": [
-                "dev",
-                "boldsolution",
-                "com",
-                "br"
+                "{{base_url}}"
               ],
               "path": [
-                "webhook",
                 "bold-get-ticket-id",
                 "tickets",
                 "id",

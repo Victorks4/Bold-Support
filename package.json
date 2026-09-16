@@ -1,0 +1,13 @@
+{
+  "name": "bold-support",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:frontend && npm run test:api",
+    "test:frontend": "npm run test:run --prefix frontend",
+    "test:api": "node scripts/run-api-tests.mjs"
+  },
+  "devDependencies": {
+    "newman": "^6.2.1"
+  }
+}

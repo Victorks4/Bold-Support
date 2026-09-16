@@ -155,3 +155,20 @@ git checkout stage/03-frontend
 - [x] `apiFetch` com Bearer + handler `401 TOKEN_INVALIDO`
 - [x] Docs (`api.md`, `openapi.yaml`, `installation.md`, `database.md`)
 - [x] Postman Etapa 4 + `access_token` no environment
+
+## Testes automatizados - Concluído
+
+### Frontend (Vitest)
+
+- [x] Configuração Vitest + Testing Library em `frontend/`
+- [x] Testes unitários: form-validation, ticket-sort, dashboard-metrics, kanban-dnd
+- [x] Testes de api/client e token-storage
+- [x] Testes de componente: LoginForm, ProtectedRoute
+
+### API (Newman)
+
+- [x] `package.json` na raiz com scripts de teste
+- [x] `scripts/run-api-tests.mjs` — Etapa 4 → 1 → 2
+- [x] `.env.test.example`
+- [x] Collections Postman normalizadas com variáveis
+- [x] Documentação em `docs/testing.md`

@@ -49,20 +49,15 @@
           }
         },
         "url": {
-          "raw": "https://dev.boldsolution.com.br/webhook/bold-patch-ticket-status/tickets/atualizar-status/15d4deb8-9321-4bf5-9314-e9a5b36339f9",
-          "protocol": "https",
+          "raw": "{{base_url}}/bold-patch-ticket-status/tickets/atualizar-status/{{ticket_id}}",
           "host": [
-            "dev",
-            "boldsolution",
-            "com",
-            "br"
+            "{{base_url}}"
           ],
           "path": [
-            "webhook",
             "bold-patch-ticket-status",
             "tickets",
             "atualizar-status",
-            "15d4deb8-9321-4bf5-9314-e9a5b36339f9"
+            "{{ticket_id}}"
           ]
         },
         "description": "Workflow: `PATCH_Ticket_Status.json`\n\nTransições a partir de `aberto`: `em_atendimento`, `cancelado`.\n\n**Erros comuns:**\n- `400 STATUS_IGUAL` - mesmo status atual\n- `400 TRANSICAO_INVALIDA` - transição não permitida\n- `404 TICKET_NAO_ENCONTRADO`"
@@ -111,20 +106,15 @@
           }
         },
         "url": {
-          "raw": "https://dev.boldsolution.com.br/webhook/bold-post-ticket-interacao/tickets/adicionar-interacao/15d4deb8-9321-4bf5-9314-e9a5b36339f9",
-          "protocol": "https",
+          "raw": "{{base_url}}/bold-post-ticket-interacao/tickets/adicionar-interacao/{{ticket_id}}",
           "host": [
-            "dev",
-            "boldsolution",
-            "com",
-            "br"
+            "{{base_url}}"
           ],
           "path": [
-            "webhook",
             "bold-post-ticket-interacao",
             "tickets",
             "adicionar-interacao",
-            "15d4deb8-9321-4bf5-9314-e9a5b36339f9"
+            "{{ticket_id}}"
           ]
         },
         "description": "Workflow: `POST_Ticket_Interacao.json`\n\nTipos permitidos: `cliente`, `agente`.\n\n**Erros comuns:**\n- `400 TIPO_INVALIDO`\n- `400 MENSAGEM_OBRIGATORIA`\n- `404 TICKET_NAO_ENCONTRADO`"
@@ -158,20 +148,15 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "https://dev.boldsolution.com.br/webhook/bold-delete-ticket/tickets/remover/92845250-3a28-4821-9df1-8f3fdca47377",
-          "protocol": "https",
+          "raw": "{{base_url}}/bold-delete-ticket/tickets/remover/{{ticket_id}}",
           "host": [
-            "dev",
-            "boldsolution",
-            "com",
-            "br"
+            "{{base_url}}"
           ],
           "path": [
-            "webhook",
             "bold-delete-ticket",
             "tickets",
             "remover",
-            "92845250-3a28-4821-9df1-8f3fdca47377"
+            "{{ticket_id}}"
           ]
         },
         "description": "Workflow: `DELETE_Ticket_por_ID.json`\n\nRemove o ticket e interações (CASCADE). Dispara webhook externo `ticket_excluido`.\n\n**Erros comuns:**\n- `400 ID_INVALIDO`\n- `404 TICKET_NAO_ENCONTRADO`"
@@ -214,20 +199,15 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "https://dev.boldsolution.com.br/webhook/bold-delete-cliente/clientes/remover/18695f4c-43be-4646-83dd-98c55ca9c90f",
-          "protocol": "https",
+          "raw": "{{base_url}}/bold-delete-cliente/clientes/remover/{{cliente_id}}",
           "host": [
-            "dev",
-            "boldsolution",
-            "com",
-            "br"
+            "{{base_url}}"
           ],
           "path": [
-            "webhook",
             "bold-delete-cliente",
             "clientes",
             "remover",
-            "18695f4c-43be-4646-83dd-98c55ca9c90f"
+            "{{cliente_id}}"
           ]
         },
         "description": "Workflow: `DELETE_Cliente_por_ID.json`\n\nSó remove se o cliente **não** tiver tickets vinculados.\n\n**Ordem sugerida:** execute o DELETE ticket antes deste.\n\n**Erros comuns:**\n- `400 ID_INVALIDO`\n- `404 CLIENTE_NAO_ENCONTRADO`\n- `409 CLIENTE_POSSUI_TICKETS` - ainda existem tickets"
@@ -240,16 +220,11 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "https://dev.boldsolution.com.br/webhook/clientes",
-          "protocol": "https",
+          "raw": "{{base_url}}/clientes",
           "host": [
-            "dev",
-            "boldsolution",
-            "com",
-            "br"
+            "{{base_url}}"
           ],
           "path": [
-            "webhook",
             "clientes"
           ]
         }
