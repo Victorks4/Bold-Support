@@ -38,6 +38,13 @@ Permitir cadastro de clientes, abertura e consulta de chamados, com histórico d
 - Layout responsivo (sidebar colapsável, mobile nav, notificações)
 - Tema claro/escuro
 
+### Etapa 4 — Autenticação JWT
+
+- Login por agente (`POST /auth/login`)
+- JWT HS256 validado no n8n em cada rota protegida
+- Sessão no frontend (`localStorage` / `sessionStorage`)
+- Logout e redirect automático em token expirado
+
 ## Stack
 
 | Camada | Tecnologia | Finalidade |
@@ -63,8 +70,8 @@ O desafio exige divisão clara das entregas no GitHub:
 | [`stage/01-core-api`](../../tree/stage/01-core-api) | CRUD básico (5 rotas) | Concluída |
 | [`stage/02-ticket-operations`](../../tree/stage/02-ticket-operations) | DELETE, PATCH, interações, webhook | Concluída |
 | [`stage/03-frontend`](../../tree/stage/03-frontend) | Frontend React — console do agente | Concluída |
-| [`stage/04-authentication`](../../tree/stage/04-authentication) | Autenticação | Pendente |
-| `main` | Última etapa estável | Etapas 1, 2 e 3 |
+| [`stage/04-authentication`](../../tree/stage/04-authentication) | Autenticação JWT | Concluída |
+| `main` | Última etapa estável | Etapas 1, 2, 3 e 4 |
 
 Detalhes e checklist: [**docs/entregas.md**](docs/entregas.md)
 

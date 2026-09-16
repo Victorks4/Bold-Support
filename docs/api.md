@@ -1,4 +1,4 @@
-# API — Bold Support (Etapas 1 e 2)
+# API — Bold Support (Etapas 1–4)
 
 Backend em **n8n** (instância Bold Solution).
 
@@ -28,14 +28,82 @@ Na instância hospedada, copie a **Production URL** de cada workflow no node `We
 | `POST_Ticket_Interacao.json` | `/webhook/bold-post-ticket-interacao/tickets/adicionar-interacao/:id` |
 | `DELETE_Ticket_por_ID.json` | `/webhook/bold-delete-ticket/tickets/remover/:id` |
 | `DELETE_Cliente_por_ID.json` | `/webhook/bold-delete-cliente/clientes/remover/:id` |
+| `POST_Auth_Login.json` | `/webhook/auth/login` |
 
 > Alguns workflows registram só o **path**; outros incluem o **Webhook ID** no meio da URL. Use sempre a Production URL exibida no n8n.
 
 > Paths únicos são obrigatórios no n8n — rotas da Etapa 2 usam prefixos (`remover`, `atualizar-status`, `adicionar-interacao`) para não conflitar com GET da Etapa 1.
 
-Autenticação: **não implementada** (Etapa 4).
+## Autenticação (Etapa 4)
+
+Todas as rotas exigem header `Authorization: Bearer <access_token>`, **exceto** `POST /auth/login`.
+
+| Código HTTP | `codigo` | Quando |
+|-------------|----------|--------|
+| 401 | `CREDENCIAIS_INVALIDAS` | E-mail ou senha incorretos no login |
+| 401 | `TOKEN_INVALIDO` | Token ausente, expirado ou assinatura inválida |
+
+O token é JWT HS256 gerado no n8n (`JWT_SECRET`). Payload: `sub` (id do agente), `email`, `nome`, `exp`.
 
 Contrato OpenAPI: [`openapi.yaml`](openapi.yaml)
+
+---
+
+## Auth
+
+### POST /auth/login
+
+**Workflow:** `POST_Auth_Login.json` (rota **pública**)
+
+Autentica um agente Bold e retorna JWT.
+
+**Body (JSON):**
+
+```json
+{
+  "email": "agente@bold.com",
+  "senha": "Bold@2026"
+}
+```
+
+| Campo | Obrigatório | Regras |
+|-------|-------------|--------|
+| `email` | Sim | Formato e-mail válido |
+| `senha` | Sim | Não vazio |
+
+**200 — Sucesso:**
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "expires_in": 3600,
+  "agente": {
+    "id": "uuid",
+    "nome": "Agente Teste",
+    "email": "agente@bold.com"
+  }
+}
+```
+
+**401 — Credenciais inválidas:**
+
+```json
+{
+  "erro": "Credenciais inválidas",
+  "codigo": "CREDENCIAIS_INVALIDAS"
+}
+```
+
+**400 — Validação:**
+
+```json
+{
+  "erro": "Email inválido",
+  "codigo": "EMAIL_INVALIDO"
+}
+```
+
+---
 
 ## Formato de erro
 

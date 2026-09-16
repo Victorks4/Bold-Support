@@ -41,16 +41,28 @@ cp .env.example .env
 
 1. Crie um projeto no Supabase.
 2. Abra **SQL Editor**.
-3. Cole o conteúdo de `database/migrations/001_initial_schema.sql`.
-4. Execute.
+3. Cole o conteúdo de `database/migrations/001_initial_schema.sql` e execute.
+4. Cole o conteúdo de `database/migrations/002_agentes.sql` e execute.
 
 ### Opção B — psql
 
 ```bash
 psql "$DATABASE_URL" -f database/migrations/001_initial_schema.sql
+psql "$DATABASE_URL" -f database/migrations/002_agentes.sql
 ```
 
-Verifique as tabelas: `clientes`, `tickets`, `interacoes`.
+Verifique as tabelas: `clientes`, `tickets`, `interacoes`, `agentes`.
+
+### Agente de teste (desenvolvimento)
+
+A migration `002_agentes.sql` cria um agente para login:
+
+| Campo | Valor |
+|-------|-------|
+| E-mail | `agente@bold.com` |
+| Senha | `Bold@2026` |
+
+> Use apenas em ambiente de desenvolvimento. Não reutilize esta senha em produção.
 
 ## 5. n8n — importar workflows
 
@@ -66,7 +78,15 @@ Verifique as tabelas: `clientes`, `tickets`, `interacoes`.
    - `DELETE_Ticket_por_ID.json`
    - `PATCH_Ticket_Status.json`
    - `POST_Ticket_Interacao.json`
-3. Em **cada** node Postgres, vincule a credencial do banco (Session Pooler recomendado no Supabase).
+   - `POST_Auth_Login.json`
+3. Configure variáveis de ambiente no n8n:
+
+| Variável | Descrição |
+|----------|-----------|
+| `JWT_SECRET` | String longa aleatória para assinar/validar JWT (obrigatório) |
+| `JWT_EXPIRES_IN` | Expiração em segundos (opcional, default `3600`) |
+
+4. Em **cada** node Postgres, vincule a credencial do banco (Session Pooler recomendado no Supabase).
 4. Nos nodes Postgres de **busca** (`Buscar_cliente`, `Buscar_ticket`, `Verificar_cliente`, `Listar_tickets`, `Buscar_interacoes`): ative **Always Output Data** nas configurações do node.
 
 ### Credencial Postgres (Supabase)
@@ -98,12 +118,16 @@ https://dev.boldsolution.com.br/webhook-test/<rota>
 ### Postman (produção)
 
 1. Importe:
-   - `postman/Bold-Support-Etapa-1.postman_collection.json` (rotas básicas — modo teste)
-   - `postman/Bold-Support-Etapa-2.postman_collection.json` (DELETE, PATCH, interações — produção)
+   - `postman/Bold-Support-Etapa-4.postman_collection.json` (login JWT)
+   - `postman/Bold-Support-Etapa-1.postman_collection.json` (rotas básicas)
+   - `postman/Bold-Support-Etapa-2.postman_collection.json` (DELETE, PATCH, interações)
    - `postman/Bold-Support.postman_environment.json`
 2. Ative o environment **Bold Support — Produção** (`base_url` = `https://dev.boldsolution.com.br/webhook`).
-3. Preencha `cliente_id` e `ticket_id` com UUIDs válidos.
-4. Ordem sugerida Etapa 2: PATCH status → POST interação → DELETE ticket → DELETE cliente (sem tickets).
+3. Execute **POST — Login agente** (Etapa 4) — o script preenche `access_token` automaticamente.
+4. Preencha `cliente_id` e `ticket_id` com UUIDs válidos.
+5. Ordem sugerida Etapa 2: PATCH status → POST interação → DELETE ticket → DELETE cliente (sem tickets).
+
+> Todas as rotas (exceto login) exigem `Authorization: Bearer {{access_token}}`. As collections Etapa 1 e 2 já incluem esse header.
 
 > Na instância Bold, algumas rotas usam só o path (`/webhook/clientes`) e outras incluem `webhookId` (`/webhook/bold-get-ticket-id/tickets/id/:id`). Tabela completa em `docs/api.md`.
 
@@ -160,7 +184,7 @@ Os `webhookId` por rota estão mapeados em `frontend/src/lib/api/client.ts` conf
 
 1. Garanta workflows **ativos** no n8n (produção `/webhook`)
 2. Acesse `http://localhost:5173`
-3. Na tela de login, clique em **Entrar** (auth mock — qualquer credencial)
+3. Faça login com o agente de teste (`agente@bold.com` / `Bold@2026`)
 4. Verifique clientes e tickets carregados (bootstrap via API)
 5. Cadastre cliente e abra chamado em `/clientes`
 6. Mova cards no kanban em `/fila` e altere status no detalhe do chamado
@@ -168,6 +192,12 @@ Os `webhookId` por rota estão mapeados em `frontend/src/lib/api/client.ts` conf
 
 Documentação detalhada: [`frontend/README.md`](../frontend/README.md)
 
-## 10. Próximos passos
+## 10. Etapa 4 — Autenticação JWT
 
-Etapas 1–3 concluídas no repositório. Próximo: autenticação (Etapa 4, branch `stage/04-authentication`).
+1. Aplique `002_agentes.sql` no Supabase.
+2. Configure `JWT_SECRET` no n8n e reimporte todos os workflows (incluindo `POST_Auth_Login.json`).
+3. Ative/publicar workflows protegidos.
+4. Teste no Postman: login → GET clientes com Bearer → GET clientes sem Bearer (401).
+5. No frontend, login real com sessão (`localStorage` se "Lembrar-me", senão `sessionStorage`).
+
+Token expirado durante o uso → API retorna `401 TOKEN_INVALIDO` → logout automático e redirect para `/`.

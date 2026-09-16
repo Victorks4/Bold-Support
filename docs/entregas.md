@@ -10,11 +10,11 @@ Padrão: `stage/<número>-<descrição>` — prefixo `stage/` agrupa entregas, n
 
 | Branch | Etapa | Conteúdo | Status |
 |--------|-------|----------|--------|
-| `main` | — | Última etapa estável entregue | Etapas 1, 2 e 3 |
+| `main` | — | Última etapa estável entregue | Etapas 1, 2, 3 e 4 |
 | `stage/01-core-api` | 1 | Snapshot congelado — CRUD básico (5 rotas) | Concluída |
 | `stage/02-ticket-operations` | 2 | DELETE, PATCH status, interações, webhook externo | Concluída |
 | `stage/03-frontend` | 3 | Frontend React — console do agente | Concluída |
-| `stage/04-authentication` | 4 | Autenticação JWT/OAuth | Pendente |
+| `stage/04-authentication` | 4 | Autenticação JWT por agente | Concluída |
 
 ### Fluxo de trabalho
 
@@ -96,7 +96,7 @@ git checkout stage/03-frontend
 
 | Rota | Tela |
 |------|------|
-| `/` | Login (mock) |
+| `/` | Login (JWT — agente Bold) |
 | `/dashboard` | Visão geral do atendimento |
 | `/fila` | Kanban — 4 colunas |
 | `/chamados` | Lista com filtros |
@@ -135,6 +135,23 @@ git checkout stage/03-frontend
 
 > **Fora de escopo:** portal self-service do cliente — o produto é console do agente Bold.
 
-## Etapa 4 — Pendente
+## Etapa 4 — Concluída
 
-**Branch:** `stage/04-authentication` — Autenticação entre frontend e backend.
+**Branch:** `stage/04-authentication`
+
+| Método | Rota | Workflow | Auth |
+|--------|------|----------|------|
+| POST | `/auth/login` | `POST_Auth_Login.json` | Pública |
+| * | Demais rotas | Workflows existentes | Bearer JWT |
+
+### Checklist Etapa 4
+
+- [x] Migration `002_agentes.sql` + seed agente teste
+- [x] Workflow `POST_Auth_Login.json` (validação `crypt()` no Postgres)
+- [x] Snippet `n8n/snippets/jwt.js` (HS256)
+- [x] Proteção JWT nos 10 workflows (Extrair_token → Validar_JWT → 401)
+- [x] `AuthContext`, `token-storage`, rotas protegidas no React
+- [x] Login real + logout + TopBar com agente logado
+- [x] `apiFetch` com Bearer + handler `401 TOKEN_INVALIDO`
+- [x] Docs (`api.md`, `openapi.yaml`, `installation.md`, `database.md`)
+- [x] Postman Etapa 4 + `access_token` no environment
