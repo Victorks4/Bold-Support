@@ -1,5 +1,7 @@
-import { Search } from 'lucide-react'
+import { LogOut, Search } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
+import { useAuth } from '@/lib/auth/AuthContext'
 import { NotificationDropdown } from './NotificationDropdown'
 
 type TopBarProps = {
@@ -7,7 +9,24 @@ type TopBarProps = {
   showSidebarToggle?: boolean
 }
 
+function initialsFromName(nome: string): string {
+  const parts = nome.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '??'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+}
+
 export function TopBar({ onToggleSidebar, showSidebarToggle }: TopBarProps) {
+  const navigate = useNavigate()
+  const { agente, logout } = useAuth()
+  const nome = agente?.nome ?? 'Agente'
+  const iniciais = initialsFromName(nome)
+
+  function handleLogout() {
+    logout()
+    navigate('/', { replace: true })
+  }
+
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-gray-100 bg-white px-4 sm:h-16 sm:px-6 dark:border-gray-800 dark:bg-[#161B26]">
       <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -41,15 +60,26 @@ export function TopBar({ onToggleSidebar, showSidebarToggle }: TopBarProps) {
         <NotificationDropdown />
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#006AFE] text-xs font-bold text-white">
-            BA
+            {iniciais}
           </span>
           <div className="hidden text-right sm:block">
-            <p className="text-sm font-semibold leading-tight text-[#0E121D] dark:text-gray-100">Bruno Alves</p>
+            <p className="text-sm font-semibold leading-tight text-[#0E121D] dark:text-gray-100">
+              {nome}
+            </p>
             <p className="flex items-center justify-end gap-1.5 text-xs text-gray-500 dark:text-gray-400">
               <span className="h-1.5 w-1.5 rounded-full bg-[#00E676]" />
               Online
             </p>
           </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-[#006AFE] dark:text-gray-300 dark:hover:bg-gray-800"
+            aria-label="Sair"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden md:inline">Sair</span>
+          </button>
         </div>
       </div>
     </header>

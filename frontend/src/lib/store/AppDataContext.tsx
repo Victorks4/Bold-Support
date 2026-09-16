@@ -213,8 +213,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       logger.info('cliente_created', { id: cliente.id, nome: cliente.nome })
       return cliente
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Não foi possível cadastrar o cliente.'
-      setActionError(message)
+      const isValidation = err instanceof ApiError && err.status === 400
+      if (!isValidation) {
+        const message = err instanceof ApiError ? err.message : 'Não foi possível cadastrar o cliente.'
+        setActionError(message)
+      }
       throw err
     }
   }, [clearActionError])
@@ -227,8 +230,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       logger.info('ticket_created', { id: ticket.id, protocolo: ticket.protocolo })
       return ticket
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Não foi possível criar o chamado.'
-      setActionError(message)
+      const isValidation = err instanceof ApiError && (err.status === 400 || err.status === 404)
+      if (!isValidation) {
+        const message = err instanceof ApiError ? err.message : 'Não foi possível criar o chamado.'
+        setActionError(message)
+      }
       throw err
     }
   }, [clearActionError])

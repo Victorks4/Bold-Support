@@ -3,14 +3,36 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel, FormAlert } from '@/components/ui/field'
+import { useAuth } from '@/lib/auth/AuthContext'
+import { hasFieldErrors, validateLoginInput } from '@/lib/utils/form-validation'
 
 export function LoginForm() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [lembrar, setLembrar] = useState(false)
   const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<ReturnType<typeof validateLoginInput>>({})
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const nextErrors = validateLoginInput({ email, senha })
+    setErrors(nextErrors)
+    if (hasFieldErrors(nextErrors)) return
+
+    setLoading(true)
+    try {
+      await login(email.trim(), senha, lembrar)
+      navigate('/dashboard', { replace: true })
+    } catch (err) {
+      setErrors({ form: err instanceof Error ? err.message : 'Não foi possível entrar.' })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="login-card w-full rounded-2xl border border-gray-100 bg-white px-7 py-9 sm:px-8 sm:py-10">
@@ -26,7 +48,9 @@ export function LoginForm() {
         </p>
       </header>
 
-      <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+      <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+        {errors.form ? <FormAlert>{errors.form}</FormAlert> : null}
+
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="email" className="text-sm font-semibold text-[#0f172a]">
@@ -35,11 +59,13 @@ export function LoginForm() {
             <Input
               id="email"
               type="email"
+              autoComplete="email"
               placeholder="voce@empresa.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="h-11 rounded-xl border-gray-200 bg-white text-[0.9375rem] shadow-none focus-visible:border-[#006AFE] focus-visible:ring-[#006AFE]/15"
             />
+            {errors.email ? <FieldError>{errors.email}</FieldError> : null}
           </Field>
 
           <Field>
@@ -50,6 +76,7 @@ export function LoginForm() {
               <Input
                 id="senha"
                 type={mostrarSenha ? 'text' : 'password'}
+                autoComplete="current-password"
                 placeholder="••••••••"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
@@ -64,6 +91,7 @@ export function LoginForm() {
                 {mostrarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
+            {errors.senha ? <FieldError>{errors.senha}</FieldError> : null}
           </Field>
         </FieldGroup>
 
@@ -86,12 +114,12 @@ export function LoginForm() {
         </div>
 
         <Button
-          type="button"
-          onClick={() => navigate('/dashboard')}
-          className="h-11 w-full rounded-xl bg-[#006AFE] text-[0.9375rem] font-semibold text-white shadow-sm hover:bg-[#0058D6]"
+          type="submit"
+          disabled={loading}
+          className="h-11 w-full rounded-xl bg-[#006AFE] text-[0.9375rem] font-semibold text-white shadow-sm hover:bg-[#0058D6] disabled:opacity-70"
         >
-          Entrar
-          <ArrowRight className="h-5 w-5" />
+          {loading ? 'Entrando…' : 'Entrar'}
+          {!loading ? <ArrowRight className="h-5 w-5" /> : null}
         </Button>
       </form>
 

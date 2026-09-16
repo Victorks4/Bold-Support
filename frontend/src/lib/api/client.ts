@@ -4,7 +4,15 @@
  * Copie a Production URL de cada workflow no n8n — formatos podem variar por rota.
  */
 
+import { getAccessToken } from '@/lib/auth/token-storage'
+
 const baseUrl = import.meta.env.VITE_N8N_WEBHOOK_BASE_URL ?? '/webhook'
+
+let unauthorizedHandler: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler
+}
 
 function webhookPath(path: string, webhookId?: string): string {
   const normalized = path.replace(/^\//, '')
@@ -12,6 +20,7 @@ function webhookPath(path: string, webhookId?: string): string {
 }
 
 export const webhookPaths = {
+  authLogin: webhookPath('auth/login'),
   postClientes: webhookPath('clientes'),
   getClientes: webhookPath('clientes'),
   getCliente: (id: string) => webhookPath(`clientes/id/${id}`),
@@ -45,13 +54,24 @@ export function buildWebhookUrl(path: string): string {
   return `${normalizedBase}/${normalizedPath}`
 }
 
-export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
+type ApiFetchInit = RequestInit & { skipAuth?: boolean }
+
+export async function apiFetch<T>(url: string, init?: ApiFetchInit): Promise<T> {
+  const { skipAuth, ...requestInit } = init ?? {}
+  const headers = new Headers(requestInit.headers)
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+  if (!skipAuth) {
+    const token = getAccessToken()
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`)
+    }
+  }
+
   const response = await fetch(url, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
+    ...requestInit,
+    headers,
   })
 
   const text = await response.text()
@@ -73,6 +93,9 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
     const body = data as { erro?: string; message?: string; codigo?: string }
     const erro = body.erro ?? body.message ?? 'Erro na requisição'
     const codigo = body.codigo ?? 'ERRO_DESCONHECIDO'
+    if (response.status === 401 && codigo === 'TOKEN_INVALIDO') {
+      unauthorizedHandler?.()
+    }
     throw new ApiError(erro, codigo, response.status)
   }
 

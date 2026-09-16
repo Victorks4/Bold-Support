@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { LoginLeftPanel } from './LoginLeftPanel'
 import { LoginForm } from './LoginForm'
 import { useIsDesktopLoginPanel } from '@/hooks/useIsDesktopLoginPanel'
+import { useAuth } from '@/lib/auth/AuthContext'
 
 export function LoginPage() {
+  const { isAuthenticated, isLoading } = useAuth()
   const showLoginPanel = useIsDesktopLoginPanel()
   const [mounted, setMounted] = useState(false)
+
+  if (!isLoading && isAuthenticated) {
+    return <Navigate to="/dashboard" replace />
+  }
 
   useEffect(() => {
     setMounted(true)
