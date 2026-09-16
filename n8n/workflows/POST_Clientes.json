@@ -12,7 +12,10 @@
       "name": "Webhook_1",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 300],
+      "position": [
+        0,
+        300
+      ],
       "webhookId": "bold-post-clientes"
     },
     {
@@ -23,18 +26,28 @@
       "name": "Validar_payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [220, 300]
+      "position": [
+        220,
+        300
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
           "conditions": [
             {
               "id": "cond-valid",
               "leftValue": "={{ $json.valid }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true" }
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
             }
           ],
           "combinator": "and"
@@ -45,7 +58,10 @@
       "name": "Payload_valido?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [440, 300]
+      "position": [
+        440,
+        300
+      ]
     },
     {
       "parameters": {
@@ -59,44 +75,216 @@
       "name": "Inserir_cliente",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [660, 200]
+      "position": [
+        660,
+        200
+      ]
     },
     {
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ $json }}",
-        "options": { "responseCode": 201 }
+        "options": {
+          "responseCode": 201
+        }
       },
       "id": "respond-201",
       "name": "Responde_201",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [880, 200]
+      "position": [
+        880,
+        200
+      ]
     },
     {
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
-        "options": { "responseCode": 400 }
+        "options": {
+          "responseCode": 400
+        }
       },
       "id": "respond-400",
       "name": "Responde_400",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [660, 420]
+      "position": [
+        660,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst headers = item.headers ?? {};\nconst auth = headers.authorization ?? headers.Authorization ?? '';\nconst match = /^Bearer\\s+(.+)$/i.exec(auth);\nreturn [{ json: { ...item, token: match ? match[1].trim() : null } }];"
+      },
+      "id": "post-clientes-extrair-token",
+      "name": "Extrair_token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.first().json;\nconst token = item.token;\nconst secret = $env.JWT_SECRET;\n\nfunction base64UrlDecode(str) {\n  return Buffer.from(str, 'base64url').toString('utf8');\n}\n\nfunction verifyJwt(token, secret) {\n  if (!token || !secret) return null;\n  const parts = token.split('.');\n  if (parts.length !== 3) return null;\n  const [encodedHeader, encodedPayload, signature] = parts;\n  const expected = crypto\n    .createHmac('sha256', secret)\n    .update(`${encodedHeader}.${encodedPayload}`)\n    .digest('base64url');\n  if (signature !== expected) return null;\n  try {\n    const payload = JSON.parse(base64UrlDecode(encodedPayload));\n    if (payload.exp && Date.now() / 1000 > payload.exp) return null;\n    return payload;\n  } catch {\n    return null;\n  }\n}\n\nconst payload = verifyJwt(token, secret);\nreturn [{ json: { ...item, jwt_valid: !!payload, jwt_payload: payload } }];"
+      },
+      "id": "post-clientes-validar-jwt",
+      "name": "Validar_JWT",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-jwt-valid",
+              "leftValue": "={{ $json.jwt_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "post-clientes-token-valido",
+      "name": "Token_valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: 'Token inválido ou expirado', codigo: 'TOKEN_INVALIDO' } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "post-clientes-respond-401",
+      "name": "Responde_401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        480
+      ]
     }
   ],
   "connections": {
-    "Webhook_1": { "main": [[{ "node": "Validar_payload", "type": "main", "index": 0 }]] },
-    "Validar_payload": { "main": [[{ "node": "Payload_valido?", "type": "main", "index": 0 }]] },
-    "Payload_valido?": {
+    "Webhook_1": {
       "main": [
-        [{ "node": "Inserir_cliente", "type": "main", "index": 0 }],
-        [{ "node": "Responde_400", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Extrair_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Inserir_cliente": { "main": [[{ "node": "Responde_201", "type": "main", "index": 0 }]] }
+    "Validar_payload": {
+      "main": [
+        [
+          {
+            "node": "Payload_valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Payload_valido?": {
+      "main": [
+        [
+          {
+            "node": "Inserir_cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responde_400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir_cliente": {
+      "main": [
+        [
+          {
+            "node": "Responde_201",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair_token": {
+      "main": [
+        [
+          {
+            "node": "Validar_JWT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar_JWT": {
+      "main": [
+        [
+          {
+            "node": "Token_valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token_valido?": {
+      "main": [
+        [
+          {
+            "node": "Validar_payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responde_401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
-  "settings": { "executionOrder": "v1" }
+  "settings": {
+    "executionOrder": "v1"
+  }
 }
