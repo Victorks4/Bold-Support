@@ -4,9 +4,11 @@
 
 - **SGBD:** PostgreSQL
 - **Provedor:** Supabase (compatível com qualquer instância PostgreSQL 14+)
-- **Migration:** [`database/migrations/001_initial_schema.sql`](../database/migrations/001_initial_schema.sql)
+- **Migrations:**
+  - [`database/migrations/001_initial_schema.sql`](../database/migrations/001_initial_schema.sql)
+  - [`database/migrations/002_agentes.sql`](../database/migrations/002_agentes.sql)
 
-Não há seeders no repositório. Dados iniciais são criados via API (`POST /clientes`, `POST /tickets`).
+Dados iniciais de clientes e tickets são criados via API. A migration `002_agentes.sql` inclui um agente de teste para desenvolvimento (credenciais em [`installation.md`](installation.md)).
 
 ## Diagrama ER
 
@@ -14,6 +16,14 @@ Não há seeders no repositório. Dados iniciais são criados via API (`POST /cl
 erDiagram
   clientes ||--o{ tickets : possui
   tickets ||--o{ interacoes : tem
+
+  agentes {
+    uuid id PK
+    varchar nome
+    varchar email UK
+    text senha_hash
+    timestamptz criado_em
+  }
 
   clientes {
     uuid id PK
@@ -45,6 +55,18 @@ erDiagram
 ```
 
 ## Tabelas
+
+### `agentes`
+
+| Coluna | Tipo | Restrições | Descrição |
+|--------|------|------------|-----------|
+| `id` | UUID | PK, default `gen_random_uuid()` | Identificador do agente |
+| `nome` | VARCHAR(150) | NOT NULL | Nome exibido no console |
+| `email` | VARCHAR(255) | NOT NULL, UNIQUE | E-mail de login |
+| `senha_hash` | TEXT | NOT NULL | Hash bcrypt via `crypt()` / `gen_salt('bf')` |
+| `criado_em` | TIMESTAMPTZ | NOT NULL, default `now()` | Data de cadastro |
+
+**Acesso:** somente via workflows n8n (credencial servidor). RLS desligado — o frontend não acessa o Supabase diretamente.
 
 ### `clientes`
 
@@ -110,9 +132,10 @@ Aplicar o schema inicial:
 
 ```bash
 psql "$DATABASE_URL" -f database/migrations/001_initial_schema.sql
+psql "$DATABASE_URL" -f database/migrations/002_agentes.sql
 ```
 
-No Supabase: SQL Editor → colar o conteúdo do arquivo → Run.
+No Supabase: SQL Editor → colar o conteúdo de cada arquivo → Run (na ordem).
 
 **Reset completo (cuidado — apaga dados):**
 

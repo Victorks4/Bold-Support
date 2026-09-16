@@ -1,0 +1,165 @@
+{
+  "name": "POST_Auth_Login",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "auth/login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-auth-login",
+      "name": "Webhook_1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "bold-auth-login"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nconst email = body.email?.trim().toLowerCase();\nconst senha = body.senha ?? body.password ?? '';\n\nif (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {\n  return [{ json: { valid: false, status: 400, erro: 'Email inválido', codigo: 'EMAIL_INVALIDO' } }];\n}\nif (!senha || !String(senha).trim()) {\n  return [{ json: { valid: false, status: 400, erro: 'Senha obrigatória', codigo: 'SENHA_OBRIGATORIA' } }];\n}\n\nreturn [{ json: { valid: true, email, senha: String(senha) } }];"
+      },
+      "id": "code-validar-login",
+      "name": "Validar_payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-payload-valido",
+      "name": "Payload_valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, nome, email FROM agentes WHERE email = $1 AND senha_hash = crypt($2, senha_hash);",
+        "options": {
+          "queryReplacement": "={{ $json.email }},{{ $json.senha }}"
+        }
+      },
+      "id": "postgres-buscar-agente",
+      "name": "Buscar_agente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [660, 200],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.first().json;\nif (!row?.id) {\n  return [{ json: { found: false } }];\n}\nreturn [{ json: { found: true, id: row.id, nome: row.nome, email: row.email } }];"
+      },
+      "id": "code-agente-encontrado",
+      "name": "Agente_encontrado?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-found",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-agente-found",
+      "name": "Credenciais_validas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst agente = $input.first().json;\nconst secret = $env.JWT_SECRET;\nconst expiresIn = Number($env.JWT_EXPIRES_IN || 3600);\nconst now = Math.floor(Date.now() / 1000);\n\nfunction base64UrlEncode(input) {\n  const buffer = Buffer.isBuffer(input) ? input : Buffer.from(input, 'utf8');\n  return buffer.toString('base64url');\n}\n\nfunction signJwt(payload, secret) {\n  const header = { alg: 'HS256', typ: 'JWT' };\n  const encodedHeader = base64UrlEncode(JSON.stringify(header));\n  const encodedPayload = base64UrlEncode(JSON.stringify(payload));\n  const signature = crypto\n    .createHmac('sha256', secret)\n    .update(`${encodedHeader}.${encodedPayload}`)\n    .digest('base64url');\n  return `${encodedHeader}.${encodedPayload}.${signature}`;\n}\n\nif (!secret) {\n  throw new Error('JWT_SECRET não configurado no n8n');\n}\n\nconst token = signJwt(\n  { sub: agente.id, email: agente.email, nome: agente.nome, exp: now + expiresIn },\n  secret\n);\n\nreturn [{\n  json: {\n    access_token: token,\n    expires_in: expiresIn,\n    agente: { id: agente.id, nome: agente.nome, email: agente.email }\n  }\n}];"
+      },
+      "id": "code-gerar-jwt",
+      "name": "Gerar_JWT",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 120]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-200",
+      "name": "Responde_200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1540, 120]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: 'Credenciais inválidas', codigo: 'CREDENCIAIS_INVALIDAS' } }}",
+        "options": { "responseCode": 401 }
+      },
+      "id": "respond-401-credenciais",
+      "name": "Responde_401_credenciais",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 280]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: $json.erro, codigo: $json.codigo } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-400",
+      "name": "Responde_400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 400]
+    }
+  ],
+  "connections": {
+    "Webhook_1": { "main": [[{ "node": "Validar_payload", "type": "main", "index": 0 }]] },
+    "Validar_payload": { "main": [[{ "node": "Payload_valido?", "type": "main", "index": 0 }]] },
+    "Payload_valido?": {
+      "main": [
+        [{ "node": "Buscar_agente", "type": "main", "index": 0 }],
+        [{ "node": "Responde_400", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar_agente": { "main": [[{ "node": "Agente_encontrado?", "type": "main", "index": 0 }]] },
+    "Agente_encontrado?": { "main": [[{ "node": "Credenciais_validas?", "type": "main", "index": 0 }]] },
+    "Credenciais_validas?": {
+      "main": [
+        [{ "node": "Gerar_JWT", "type": "main", "index": 0 }],
+        [{ "node": "Responde_401_credenciais", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gerar_JWT": { "main": [[{ "node": "Responde_200", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
