@@ -8,21 +8,24 @@ import { VolumeChart } from '@/components/dashboard/VolumeChart'
 import { RecentEventsCard } from '@/components/dashboard/RecentEventsCard'
 import { staggerContainer, staggerItem } from '@/components/motion/PageTransition'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/lib/auth/AuthContext'
 import { useAppData } from '@/lib/store/AppDataContext'
 import { computeDashboardMetrics, volumeSemanal } from '@/lib/utils/dashboard-metrics'
 import { greeting } from '@/lib/utils/time'
 
 export function DashboardPage() {
+  const { agente } = useAuth()
   const { tickets, eventos, getClienteNome } = useAppData()
   const recent = tickets.slice(0, 3)
   const stats = computeDashboardMetrics(tickets)
+  const primeiroNome = agente?.nome?.trim().split(/\s+/)[0] ?? 'Agente'
 
   return (
     <motion.div variants={staggerContainer} initial="hidden" animate="show">
       <motion.div variants={staggerItem} className="mb-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-bold tracking-[0.12em] text-[#006AFE] uppercase">Visão geral</p>
-          <h1 className="text-app-heading text-2xl font-bold sm:text-3xl">{greeting()}, Bruno.</h1>
+          <h1 className="text-app-heading text-2xl font-bold sm:text-3xl">{greeting()}, {primeiroNome}.</h1>
           <p className="text-app-muted mt-1 text-sm">Console de atendimento Bold Support</p>
         </div>
         <Link to="/clientes" className="w-full sm:w-auto">

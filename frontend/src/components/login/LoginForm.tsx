@@ -53,7 +53,7 @@ export function LoginForm() {
 
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="email" className="text-sm font-semibold text-[#0f172a]">
+            <FieldLabel htmlFor="email" className="!text-[#0E121D] text-sm font-semibold">
               Email
             </FieldLabel>
             <Input
@@ -63,13 +63,13 @@ export function LoginForm() {
               placeholder="voce@empresa.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-11 rounded-xl border-gray-200 bg-white text-[0.9375rem] shadow-none focus-visible:border-[#006AFE] focus-visible:ring-[#006AFE]/15"
+              className="login-input shadow-none ring-0"
             />
             {errors.email ? <FieldError>{errors.email}</FieldError> : null}
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="senha" className="text-sm font-semibold text-[#0f172a]">
+            <FieldLabel htmlFor="senha" className="!text-[#0E121D] text-sm font-semibold">
               Senha
             </FieldLabel>
             <div className="relative">
@@ -77,15 +77,15 @@ export function LoginForm() {
                 id="senha"
                 type={mostrarSenha ? 'text' : 'password'}
                 autoComplete="current-password"
-                placeholder="••••••••"
+                placeholder="Sua senha"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                className="h-11 rounded-xl border-gray-200 bg-white pr-11 text-[0.9375rem] shadow-none focus-visible:border-[#006AFE] focus-visible:ring-[#006AFE]/15"
+                className="login-input login-input--password shadow-none ring-0"
               />
               <button
                 type="button"
                 onClick={() => setMostrarSenha((v) => !v)}
-                className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-gray-400 transition-colors hover:text-gray-700"
+                className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
                 aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
               >
                 {mostrarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -95,23 +95,15 @@ export function LoginForm() {
           </Field>
         </FieldGroup>
 
-        <div className="flex items-center justify-between gap-4">
-          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-gray-600">
-            <input
-              type="checkbox"
-              checked={lembrar}
-              onChange={(e) => setLembrar(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-[#006AFE] focus:ring-[#006AFE]/30"
-            />
-            Lembrar-me
-          </label>
-          <button
-            type="button"
-            className="text-sm font-semibold text-[#006AFE] transition-colors hover:text-[#0058D6]"
-          >
-            Esqueci minha senha
-          </button>
-        </div>
+        <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#0E121D]">
+          <input
+            type="checkbox"
+            checked={lembrar}
+            onChange={(e) => setLembrar(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-[#006AFE] focus:ring-[#006AFE]/30"
+          />
+          Lembrar-me
+        </label>
 
         <Button
           type="submit"

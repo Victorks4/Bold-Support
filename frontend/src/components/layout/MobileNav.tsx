@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Activity, LayoutDashboard, ListOrdered, LogOut, Ticket, Users } from 'lucide-react'
+import { useAuth } from '@/lib/auth/AuthContext'
 import { useAppData } from '@/lib/store/AppDataContext'
 import { countActiveTickets } from '@/lib/utils/dashboard-metrics'
 
@@ -13,8 +14,14 @@ const items = [
 
 export function MobileNav() {
   const navigate = useNavigate()
+  const { logout } = useAuth()
   const { tickets } = useAppData()
   const activeCount = countActiveTickets(tickets)
+
+  function handleLogout() {
+    logout()
+    navigate('/', { replace: true })
+  }
 
   return (
     <nav
@@ -44,7 +51,7 @@ export function MobileNav() {
       ))}
       <button
         type="button"
-        onClick={() => navigate('/')}
+        onClick={handleLogout}
         className="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium text-gray-500 dark:text-gray-400"
         aria-label="Sair"
       >

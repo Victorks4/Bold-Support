@@ -1,8 +1,10 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Activity, Headphones, Kanban, LayoutDashboard, LogOut, Users } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useAuth } from '@/lib/auth/AuthContext'
 import { useAppData } from '@/lib/store/AppDataContext'
 import { countActiveTickets } from '@/lib/utils/dashboard-metrics'
+import { getInitials } from '@/lib/utils/initials'
 import { cn } from '@/lib/utils'
 import { SidebarBrand } from './SidebarBrand'
 import { ThemeToggle } from './ThemeToggle'
@@ -30,11 +32,15 @@ function menuIconClass(isActive: boolean) {
 
 export function Sidebar({ collapsed = false }: SidebarProps) {
   const navigate = useNavigate()
+  const { agente, logout } = useAuth()
   const { tickets } = useAppData()
   const activeCount = countActiveTickets(tickets)
+  const nome = agente?.nome ?? 'Agente'
+  const iniciais = getInitials(nome)
 
   function handleLogout() {
-    navigate('/')
+    logout()
+    navigate('/', { replace: true })
   }
 
   return (
@@ -125,11 +131,11 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
           )}
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#006AFE] text-[10px] font-bold text-white">
-            BA
+            {iniciais}
           </span>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-[#0E121D] dark:text-gray-100">Bruno Alves</p>
+              <p className="truncate text-xs font-semibold text-[#0E121D] dark:text-gray-100">{nome}</p>
               <p className="truncate text-[10px] text-gray-500 dark:text-gray-400">Agente</p>
             </div>
           )}
