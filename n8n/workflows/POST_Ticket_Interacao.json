@@ -41,11 +41,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-payload-valido-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-payload-valido",
       "name": "Payload_valido?",
@@ -97,11 +104,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-encontrado-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-encontrado",
       "name": "Encontrado?",
@@ -144,16 +158,30 @@
       "position": [
         2860,
         300
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.WEBHOOK_EXTERNO_URL || 'https://webhook.site/placeholder-bold-support' }}",
+        "url": "https://webhook.site/11a466f4-4072-4933-9a03-6d01af6fde27",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { protocolo: $('Ticket_existe?').first().json.protocolo, evento: 'interacao_adicionada', status: $('Ticket_existe?').first().json.status } }}",
-        "options": {}
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 3000
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
       },
       "id": "http-webhook-externo",
       "name": "Webhook_externo",
@@ -163,12 +191,15 @@
         3120,
         300
       ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
       "continueOnFail": true
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ $('Inserir_interacao').first().json }}",
+        "responseBody": "={{ $json }}",
         "options": {
           "responseCode": 201
         }
@@ -393,7 +424,7 @@
       "main": [
         [
           {
-            "node": "Atualizar_ticket",
+            "node": "Responde_201",
             "type": "main",
             "index": 0
           }
@@ -402,20 +433,25 @@
     },
     "Atualizar_ticket": {
       "main": [
-        [
-          {
-            "node": "Webhook_externo",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Webhook_externo": {
       "main": [
         [
           {
-            "node": "Responde_201",
+            "node": "Atualizar_ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responde_201": {
+      "main": [
+        [
+          {
+            "node": "Webhook_externo",
             "type": "main",
             "index": 0
           }

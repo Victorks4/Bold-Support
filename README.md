@@ -97,8 +97,8 @@ psql "$DATABASE_URL" -f database/migrations/001_initial_schema.sql
 psql "$DATABASE_URL" -f database/migrations/002_agentes.sql
 psql "$DATABASE_URL" -f database/migrations/003_app_config.sql
 
-# 4. Importar workflows de n8n/workflows/ no n8n
-# 5. Testar com Postman - ver docs/installation.md
+# 4. Importar workflows: npm run n8n:import (ver docs/installation.md)
+# 5. Testar com Postman ou npm test
 
 # 6. Frontend
 cd frontend
@@ -123,7 +123,12 @@ Configure `cp .env.test.example .env.test` antes dos testes de API.
 
 Guia: [**docs/testing.md**](docs/testing.md) | Env: [`.env.test.example`](.env.test.example)
 
-Deploy do backend (n8n no Railway): [**docs/deployment-backend.md**](docs/deployment-backend.md)
+| Deploy | Guia |
+|--------|------|
+| Backend (n8n no Railway) | [**docs/deployment-backend.md**](docs/deployment-backend.md) |
+| Frontend (Firebase Hosting) | [**docs/deployment-frontend.md**](docs/deployment-frontend.md) |
+
+**Produção:** https://bold-support.web.app · API: `https://bold-support-production.up.railway.app/webhook`
 
 Guia completo: [**docs/installation.md**](docs/installation.md)
 
@@ -153,32 +158,46 @@ Detalhes em [`frontend/.env.example`](frontend/.env.example).
 
 ```
 Bold-Support/
-├── database/migrations/       # Schema SQL
+├── database/migrations/       # Schema SQL (001–003)
+├── deploy/n8n/                # Dockerfile + docker-compose (Railway)
 ├── docs/
-│   ├── architecture.md        # Arquitetura e fluxos
-│   ├── api.md                 # Endpoints e exemplos
-│   ├── database.md            # Modelagem e ER
-│   ├── entregas.md            # Branches e checklist por etapa
-│   ├── installation.md        # Guia de instalação
-│   └── openapi.yaml           # Contrato OpenAPI 3
-├── frontend/                  # React + Vite (console do agente)
-│   ├── public/images/         # logobold.png, boldiconsidebar.png, boldfavicon.png
-│   ├── public/videos/         # boldsupport.mp4 (painel de login)
+│   ├── architecture.md
+│   ├── api.md
+│   ├── database.md
+│   ├── deployment-backend.md  # Railway + n8n
+│   ├── deployment-frontend.md # Firebase Hosting
+│   ├── entregas.md
+│   ├── installation.md
+│   ├── testing.md
+│   └── openapi.yaml
+├── frontend/                  # React 19 + Vite 8 (console do agente)
+│   ├── .env.production        # URLs de build Firebase
 │   └── src/
 │       ├── pages/             # Dashboard, Fila, Chamados, Clientes, Eventos
 │       ├── components/        # layout, dashboard, queue, tickets, ui
+│       ├── hooks/             # useReducedMotion, useIsDesktopLoginPanel
 │       └── lib/
-│           ├── store/         # AppDataContext (estado + API n8n)
-│           ├── api/           # client.ts, clientes.ts, tickets.ts
-│           └── types/         # Cliente, Ticket, Evento
-├── n8n/workflows/             # Backend (10 workflows)
-├── postman/                   # Collections Etapa 1 e 2 + environment
-└── .env.example
+│           ├── store/         # AppDataContext
+│           ├── api/           # client, clientes, tickets, ticket-parse
+│           ├── constants/     # limites de campos (telefone, descrição)
+│           └── utils/         # validação, métricas, máscaras
+├── n8n/
+│   ├── workflows/             # 11 workflows (backend)
+│   └── snippets/              # jwt-pure-inline.js (referência JWT)
+├── postman/                   # Collections Etapas 1, 2 e 4 + environment
+├── scripts/
+│   ├── import-n8n-workflows.mjs
+│   ├── fix-n8n-if-nodes.mjs
+│   └── run-api-tests.mjs
+├── firebase.json              # Firebase Hosting
+├── railway.toml               # Deploy n8n no Railway
+├── .env.example
+└── .env.railway.example       # Import de workflows via API
 ```
 
 ## Frontend (Etapa 3)
 
-Console do agente Bold - login em `/`, dashboard em `/dashboard`. Consumo da API n8n via proxy Vite em desenvolvimento (`/webhook` → `dev.boldsolution.com.br`).
+Console do agente Bold — produção em https://bold-support.web.app. Em desenvolvimento, proxy Vite em `/webhook`.
 
 ```bash
 cd frontend

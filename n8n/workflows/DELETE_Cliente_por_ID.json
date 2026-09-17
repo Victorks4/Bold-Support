@@ -41,11 +41,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-id-valido-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-id-valido",
       "name": "Id_valido?",
@@ -97,11 +104,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-encontrado-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-encontrado",
       "name": "Encontrado?",
@@ -152,11 +166,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-pode-excluir-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-pode-excluir",
       "name": "Sem_tickets?",

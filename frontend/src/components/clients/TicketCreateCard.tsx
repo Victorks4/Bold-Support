@@ -3,7 +3,9 @@ import { ArrowRight, Headphones } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Field, FieldError, FieldGroup, FieldLabel, FormAlert } from '@/components/ui/field'
+import { DESCRICAO_MAX_LENGTH, TITULO_MAX_LENGTH } from '@/lib/constants/field-limits'
+import { clampText } from '@/lib/utils/input-masks'
+import { Field, FieldError, FieldGroup, FieldHint, FieldLabel, FormAlert } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
@@ -132,8 +134,9 @@ export function TicketCreateCard({ clientes, onCreate }: TicketCreateCardProps) 
                 id="ticket-titulo"
                 placeholder="Resumo do problema"
                 value={titulo}
+                maxLength={TITULO_MAX_LENGTH}
                 onChange={(e) => {
-                  setTitulo(e.target.value)
+                  setTitulo(clampText(e.target.value, TITULO_MAX_LENGTH))
                   clearFieldError('titulo')
                 }}
                 aria-invalid={Boolean(errors.titulo)}
@@ -147,14 +150,19 @@ export function TicketCreateCard({ clientes, onCreate }: TicketCreateCardProps) 
                 id="ticket-descricao"
                 placeholder="Descreva o chamado com detalhes..."
                 value={descricao}
+                maxLength={DESCRICAO_MAX_LENGTH}
                 onChange={(e) => {
-                  setDescricao(e.target.value)
+                  setDescricao(clampText(e.target.value, DESCRICAO_MAX_LENGTH))
                   clearFieldError('descricao')
                 }}
                 aria-invalid={Boolean(errors.descricao)}
+                aria-describedby="ticket-descricao-hint"
                 className={cn(errors.descricao && 'border-red-400 focus-visible:ring-red-400')}
                 rows={4}
               />
+              <FieldHint id="ticket-descricao-hint">
+                {descricao.length}/{DESCRICAO_MAX_LENGTH} caracteres
+              </FieldHint>
               {errors.descricao && <FieldError>{errors.descricao}</FieldError>}
             </Field>
             <Field>

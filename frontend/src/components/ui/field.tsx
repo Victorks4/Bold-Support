@@ -40,3 +40,7 @@ export function FormAlert({ className, ...props }: ComponentProps<'div'>) {
     />
   )
 }
+
+export function FieldHint({ className, ...props }: ComponentProps<'p'>) {
+  return <p className={cn('text-xs text-gray-400 dark:text-gray-500', className)} {...props} />
+}

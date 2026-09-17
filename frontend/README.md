@@ -113,6 +113,34 @@ Mapeamento de URLs (path + `webhookId` onde necessário) em `src/lib/api/client.
 
 Métricas do dashboard: `lib/utils/dashboard-metrics.ts`. Ordenação por prioridade: `lib/utils/ticket-sort.ts`.
 
+## Validação de formulários
+
+| Campo | Limite |
+|-------|--------|
+| Telefone (cliente) | 10–11 dígitos, máscara `(11) 99999-9999` |
+| Descrição do chamado | 1000 caracteres |
+| Interações (agente/cliente) | 1000 caracteres |
+| Título do chamado | 200 caracteres |
+
+Constantes em `src/lib/constants/field-limits.ts`. Máscaras em `src/lib/utils/input-masks.ts`.
+
+## Performance e acessibilidade
+
+- **Lazy loading** de páginas (`React.lazy` + `Suspense`) — bundle inicial menor
+- **Code splitting** — `vendor-react` e `vendor-motion` separados no build
+- **`prefers-reduced-motion`** — animações desativadas quando o usuário solicita
+- Contadores de caracteres com `aria-describedby` nos formulários
+- Polling webhook.site a cada 60s (evita rate limit)
+
+## Deploy (Firebase)
+
+```bash
+npm run build
+cd .. && firebase deploy --only hosting --project bold-support
+```
+
+Ver [docs/deployment-frontend.md](../docs/deployment-frontend.md).
+
 ## Motion
 
-- **Framer Motion:** transições de página, stagger no dashboard, sidebar ativa, kanban, timeline
+- **Framer Motion:** transições de página, stagger no dashboard, sidebar ativa, kanban, timeline (respeita `prefers-reduced-motion`)

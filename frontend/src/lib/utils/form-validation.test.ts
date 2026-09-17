@@ -41,6 +41,15 @@ describe('validateClienteInput', () => {
     expect(errors.email).toBe('Informe um e-mail válido.')
     expect(errors.nome).toBeUndefined()
   })
+
+  it('rejeita telefone com menos de 10 dígitos', () => {
+    const errors = validateClienteInput({
+      nome: 'Victor',
+      email: 'victor@empresa.com',
+      telefone: '1199999',
+    })
+    expect(errors.telefone).toMatch(/dígitos/)
+  })
 })
 
 describe('validateTicketInput', () => {
@@ -56,6 +65,15 @@ describe('validateTicketInput', () => {
       descricao: 'Detalhes do chamado',
     })
     expect(hasFieldErrors(errors)).toBe(false)
+  })
+
+  it('rejeita descrição acima de 1000 caracteres', () => {
+    const errors = validateTicketInput({
+      cliente_id: 'uuid',
+      titulo: 'Problema',
+      descricao: 'a'.repeat(1001),
+    })
+    expect(errors.descricao).toMatch(/1000 caracteres/)
   })
 })
 

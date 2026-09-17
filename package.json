@@ -5,7 +5,9 @@
   "scripts": {
     "test": "npm run test:frontend && npm run test:api",
     "test:frontend": "npm run test:run --prefix frontend",
-    "test:api": "node scripts/run-api-tests.mjs"
+    "test:api": "node scripts/run-api-tests.mjs",
+    "n8n:fix-if": "node scripts/fix-n8n-if-nodes.mjs",
+    "n8n:import": "node scripts/fix-n8n-if-nodes.mjs && node scripts/import-n8n-workflows.mjs"
   },
   "devDependencies": {
     "newman": "^6.2.1"

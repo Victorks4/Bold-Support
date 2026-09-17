@@ -172,3 +172,21 @@ git checkout stage/03-frontend
 - [x] `.env.test.example`
 - [x] Collections Postman normalizadas com variáveis
 - [x] Documentação em `docs/testing.md`
+
+## Deploy em produção - Concluído
+
+| Componente | URL | Guia |
+|------------|-----|------|
+| Backend n8n (Railway) | https://bold-support-production.up.railway.app | [deployment-backend.md](deployment-backend.md) |
+| Frontend (Firebase) | https://bold-support.web.app | [deployment-frontend.md](deployment-frontend.md) |
+| Webhook externo | webhook.site (configurado nos workflows) | [installation.md](installation.md) |
+
+### Checklist deploy
+
+- [x] n8n 1.123+ no Railway (CORS PATCH/DELETE)
+- [x] `npm run n8n:import` — 11 workflows com Postgres
+- [x] Firebase Hosting (`firebase.json`, `.firebaserc`)
+- [x] `frontend/.env.production` com URLs Railway + webhook.site
+- [x] Scripts `import-n8n-workflows.mjs` e `fix-n8n-if-nodes.mjs`
+- [x] Validação frontend: telefone 11 dígitos, descrição 1000 chars
+- [x] Lazy loading + code splitting no frontend

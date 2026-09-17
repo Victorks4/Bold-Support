@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { AnimatePresence } from 'framer-motion'
 import { Outlet, useLocation } from 'react-router-dom'
 import { PageTransition } from '@/components/motion/PageTransition'
 import { useAppData } from '@/lib/store/AppDataContext'
@@ -10,7 +9,7 @@ import { TopBar } from './TopBar'
 export function AppShell() {
   const location = useLocation()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const { isLoading, error, actionError, clearActionError, refresh } = useAppData()
+  const { isLoading, isRefreshing, error, actionError, clearActionError, refresh } = useAppData()
 
   return (
     <div className="app-shell flex min-h-dvh bg-[#F3F4F6] dark:bg-[#0E121D]">
@@ -47,12 +46,13 @@ export function AppShell() {
         {isLoading && !error && (
           <p className="text-app-muted px-4 pt-3 text-sm sm:px-6">Carregando dados...</p>
         )}
+        {isRefreshing && !isLoading && !error && (
+          <p className="text-app-muted px-4 pt-2 text-xs sm:px-6">Atualizando dados...</p>
+        )}
         <main className="flex-1 overflow-auto p-4 pb-[72px] text-[#0E121D] sm:p-6 lg:pb-6 dark:text-gray-100">
-          <AnimatePresence mode="wait">
-            <PageTransition key={location.pathname}>
-              <Outlet />
-            </PageTransition>
-          </AnimatePresence>
+          <PageTransition key={location.pathname}>
+            <Outlet />
+          </PageTransition>
         </main>
       </div>
       <MobileNav />

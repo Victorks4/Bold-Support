@@ -19,6 +19,10 @@ const dotColor: Record<TicketStatus, string> = {
 }
 
 export function StatusBadge({ status }: { status: TicketStatus }) {
+  if (!status || !STATUS_LABELS[status]) {
+    return <Badge variant="muted">—</Badge>
+  }
+
   return (
     <Badge variant={variantMap[status]}>
       <span className={`h-1.5 w-1.5 rounded-full ${dotColor[status]}`} />

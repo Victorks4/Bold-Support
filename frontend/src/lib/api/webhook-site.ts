@@ -51,7 +51,9 @@ export async function fetchWebhookSiteEvents(token: string): Promise<WebhookSite
   const normalized = normalizeWebhookSiteToken(token)
   if (!normalized) return []
 
-  const base = import.meta.env.VITE_WEBHOOK_SITE_PROXY ?? '/webhook-site-api'
+  const base =
+    import.meta.env.VITE_WEBHOOK_SITE_PROXY ??
+    (import.meta.env.PROD ? 'https://webhook.site' : '/webhook-site-api')
   const url = `${base.replace(/\/$/, '')}/token/${normalized}/requests?sorting=newest&per_page=30`
 
   const response = await fetch(url)

@@ -7,6 +7,7 @@
 import { getAccessToken } from '@/lib/auth/token-storage'
 
 const baseUrl = import.meta.env.VITE_N8N_WEBHOOK_BASE_URL ?? '/webhook'
+const API_TIMEOUT_MS = 25_000
 
 let unauthorizedHandler: (() => void) | null = null
 
@@ -69,10 +70,24 @@ export async function apiFetch<T>(url: string, init?: ApiFetchInit): Promise<T> 
     }
   }
 
-  const response = await fetch(url, {
-    ...requestInit,
-    headers,
-  })
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS)
+
+  let response: Response
+  try {
+    response = await fetch(url, {
+      ...requestInit,
+      headers,
+      signal: controller.signal,
+    })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new ApiError('A requisição demorou demais. Tente novamente.', 'TIMEOUT', 408)
+    }
+    throw err
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
 
   const text = await response.text()
   let data: T & { erro?: string; codigo?: string; message?: string }

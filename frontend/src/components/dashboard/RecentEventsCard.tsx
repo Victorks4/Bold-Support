@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -16,14 +17,46 @@ type RecentEventsCardProps = {
   limit?: number
 }
 
-export function RecentEventsCard({ eventos, limit = 5 }: RecentEventsCardProps) {
+function EventRow({ evento }: { evento: WebhookEvento }) {
+  const content = (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <Badge variant={tipoVariant[evento.tipo]} className="text-[10px]">
+          {EVENTO_LABELS[evento.tipo]}
+        </Badge>
+        <span className="shrink-0 text-[10px] text-gray-400">
+          {relativeTime(evento.criado_em)}
+        </span>
+      </div>
+      <p className="mt-1.5 font-mono text-xs text-[#006AFE]">{evento.protocolo}</p>
+    </>
+  )
+
+  const className =
+    'block rounded-xl border border-gray-100 p-3 transition-colors hover:border-blue-100 hover:bg-blue-50/40 dark:border-gray-800 dark:hover:border-blue-900 dark:hover:bg-blue-950/30'
+
+  if (!evento.ticket_id) {
+    return <div className={className}>{content}</div>
+  }
+
+  return (
+    <Link to={`/chamados/${evento.ticket_id}`} className={className}>
+      {content}
+    </Link>
+  )
+}
+
+export const RecentEventsCard = memo(function RecentEventsCard({
+  eventos,
+  limit = 5,
+}: RecentEventsCardProps) {
   const recent = eventos.slice(0, limit)
 
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
         <p className="text-app-heading text-sm font-bold">Últimos eventos</p>
-        <p className="text-app-muted text-xs">Webhooks simulados do n8n</p>
+        <p className="text-app-muted text-xs">Webhooks externos do n8n</p>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
         {recent.length === 0 ? (
@@ -34,20 +67,7 @@ export function RecentEventsCard({ eventos, limit = 5 }: RecentEventsCardProps) 
           <ul className="space-y-3">
             {recent.map((evento) => (
               <li key={evento.id}>
-                <Link
-                  to={`/chamados/${evento.ticket_id}`}
-                  className="block rounded-xl border border-gray-100 p-3 transition-colors hover:border-blue-100 hover:bg-blue-50/40 dark:border-gray-800 dark:hover:border-blue-900 dark:hover:bg-blue-950/30"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <Badge variant={tipoVariant[evento.tipo]} className="text-[10px]">
-                      {EVENTO_LABELS[evento.tipo]}
-                    </Badge>
-                    <span className="shrink-0 text-[10px] text-gray-400">
-                      {relativeTime(evento.criado_em)}
-                    </span>
-                  </div>
-                  <p className="mt-1.5 font-mono text-xs text-[#006AFE]">{evento.protocolo}</p>
-                </Link>
+                <EventRow evento={evento} />
               </li>
             ))}
           </ul>
@@ -61,4 +81,4 @@ export function RecentEventsCard({ eventos, limit = 5 }: RecentEventsCardProps) 
       </CardContent>
     </Card>
   )
-}
+})

@@ -41,11 +41,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-payload-valido-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-payload-valido",
       "name": "Payload_valido?",
@@ -97,11 +104,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-encontrado-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-encontrado",
       "name": "Encontrado?",
@@ -122,11 +136,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-transicao-valida-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-transicao-valida",
       "name": "Transicao_valida?",
@@ -206,16 +227,30 @@
         3900,
         300
       ],
+      "alwaysOutputData": true,
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.WEBHOOK_EXTERNO_URL || 'https://webhook.site/placeholder-bold-support' }}",
+        "url": "https://webhook.site/11a466f4-4072-4933-9a03-6d01af6fde27",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { protocolo: $('Atualizar_status').first().json.protocolo, evento: 'status_alterado', status: $('Atualizar_status').first().json.status } }}",
-        "options": {}
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 3000
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
       },
       "id": "http-webhook-externo",
       "name": "Webhook_externo",
@@ -225,6 +260,9 @@
         4160,
         300
       ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
       "continueOnFail": true
     },
     {
@@ -501,7 +539,7 @@
       "main": [
         [
           {
-            "node": "Montar_mensagem",
+            "node": "Webhook_externo",
             "type": "main",
             "index": 0
           }
@@ -534,7 +572,7 @@
       "main": [
         [
           {
-            "node": "Webhook_externo",
+            "node": "Responde_200",
             "type": "main",
             "index": 0
           }
@@ -545,7 +583,7 @@
       "main": [
         [
           {
-            "node": "Responde_200",
+            "node": "Montar_mensagem",
             "type": "main",
             "index": 0
           }

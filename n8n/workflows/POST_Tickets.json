@@ -41,11 +41,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-payload-valido-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-payload-valido",
       "name": "Payload_valido?",
@@ -97,11 +104,18 @@
               "operator": {
                 "type": "boolean",
                 "operation": "true"
-              }
+              },
+              "id": "cond-if-cliente-ok-0"
             }
           ],
-          "combinator": "and"
-        }
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
       },
       "id": "if-cliente-ok",
       "name": "Cliente_ok?",
@@ -114,32 +128,70 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $input.first().json;\nconst esc = (v) => String(v).replace(/'/g, \"''\");\n\nconst query = `\nINSERT INTO tickets (protocolo, cliente_id, titulo, descricao, prioridade, status)\nVALUES ('${esc(d.protocolo)}', '${d.cliente_id}'::uuid, '${esc(d.titulo)}', '${esc(d.descricao)}', '${esc(d.prioridade)}', '${esc(d.status)}')\nRETURNING id, protocolo, cliente_id, titulo, descricao, prioridade, status, criado_em, atualizado_em\n`;\n\nreturn [{ json: { query } }];"
-      },
-      "id": "code-montar-insert",
-      "name": "Montar_insert",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2600,
-        300
-      ]
-    },
-    {
-      "parameters": {
         "operation": "executeQuery",
-        "query": "={{ $json.query }}",
-        "options": {}
+        "query": "INSERT INTO tickets (protocolo, cliente_id, titulo, descricao, prioridade, status)\nVALUES ($1, $2::uuid, $3, $4, $5, $6)\nRETURNING id, protocolo, cliente_id, titulo, descricao, prioridade, status, criado_em, atualizado_em;",
+        "options": {
+          "queryReplacement": "={{ $json.protocolo }},{{ $json.cliente_id }},{{ $json.titulo }},{{ $json.descricao }},{{ $json.prioridade }},{{ $json.status }}"
+        }
       },
       "id": "postgres-inserir-ticket",
       "name": "Inserir_ticket",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        2860,
+        2600,
         300
       ],
       "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "id": "cond-if-ticket-inserido-0"
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
+      },
+      "id": "if-ticket-inserido",
+      "name": "Ticket_inserido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { erro: 'Falha ao criar chamado no banco', codigo: 'ERRO_INTERNO' } }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "respond-500",
+      "name": "Responde_500",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3120,
+        520
+      ]
     },
     {
       "parameters": {
@@ -174,8 +226,21 @@
     },
     {
       "parameters": {
+        "jsCode": "const ticket = $('Inserir_ticket').first().json;\nif (!ticket?.id || !ticket?.protocolo) {\n  throw new Error('Ticket incompleto após insert');\n}\nconst toIso = (value) => {\n  if (!value) return new Date().toISOString();\n  if (typeof value === 'string') return value;\n  const parsed = new Date(value);\n  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();\n};\n\nreturn [{\n  json: {\n    id: String(ticket.id),\n    protocolo: String(ticket.protocolo),\n    cliente_id: String(ticket.cliente_id),\n    titulo: String(ticket.titulo),\n    descricao: String(ticket.descricao),\n    prioridade: String(ticket.prioridade),\n    status: String(ticket.status),\n    criado_em: toIso(ticket.criado_em),\n    atualizado_em: toIso(ticket.atualizado_em),\n  }\n}];"
+      },
+      "id": "code-formatar-resposta",
+      "name": "Formatar_resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3510,
+        300
+      ]
+    },
+    {
+      "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ $('Inserir_ticket').first().json }}",
+        "responseBody": "={{ $json }}",
         "options": {
           "responseCode": 201
         }
@@ -382,7 +447,7 @@
       "main": [
         [
           {
-            "node": "Montar_insert",
+            "node": "Inserir_ticket",
             "type": "main",
             "index": 0
           }
@@ -396,22 +461,29 @@
         ]
       ]
     },
-    "Montar_insert": {
+    "Inserir_ticket": {
       "main": [
         [
           {
-            "node": "Inserir_ticket",
+            "node": "Ticket_inserido?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Inserir_ticket": {
+    "Ticket_inserido?": {
       "main": [
         [
           {
             "node": "Preparar_interacao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responde_500",
             "type": "main",
             "index": 0
           }
@@ -430,6 +502,17 @@
       ]
     },
     "Interacao_sistema": {
+      "main": [
+        [
+          {
+            "node": "Formatar_resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar_resposta": {
       "main": [
         [
           {

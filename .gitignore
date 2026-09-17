@@ -1,9 +1,13 @@
 .env
 .env.local
+.env.railway
+.env.test
 .cursor/*
 !.cursor/skills/
 !.cursor/skills/**
 .cursor/skills/project-documentation/
 node_modules/
 dist/
+frontend/dist/
+.firebase/
 *.log

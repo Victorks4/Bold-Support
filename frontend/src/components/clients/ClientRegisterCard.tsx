@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Plus, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Field, FieldError, FieldGroup, FieldLabel, FormAlert } from '@/components/ui/field'
+import { TELEFONE_MAX_DIGITS } from '@/lib/constants/field-limits'
+import { formatTelefoneDisplay, sanitizeTelefoneInput } from '@/lib/utils/input-masks'
+import { Field, FieldError, FieldGroup, FieldHint, FieldLabel, FormAlert } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { ApiError } from '@/lib/api/client'
 import type { Cliente } from '@/lib/types/cliente'
@@ -61,7 +63,7 @@ export function ClientRegisterCard({
       await onAdd({
         nome: payload.nome.trim(),
         email: payload.email.trim(),
-        telefone: payload.telefone.trim(),
+        telefone: sanitizeTelefoneInput(payload.telefone),
       })
       setNome('')
       setEmail('')
@@ -132,15 +134,23 @@ export function ClientRegisterCard({
               <FieldLabel htmlFor="cliente-telefone">Telefone</FieldLabel>
               <Input
                 id="cliente-telefone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
                 placeholder="(00) 00000-0000"
-                value={telefone}
+                value={formatTelefoneDisplay(telefone)}
+                maxLength={15}
                 onChange={(e) => {
-                  setTelefone(e.target.value)
+                  setTelefone(sanitizeTelefoneInput(e.target.value))
                   clearFieldError('telefone')
                 }}
                 aria-invalid={Boolean(errors.telefone)}
+                aria-describedby="cliente-telefone-hint"
                 className={cn('h-10 rounded-xl', errors.telefone && 'border-red-400 focus-visible:ring-red-400')}
               />
+              <FieldHint id="cliente-telefone-hint">
+                {telefone.length}/{TELEFONE_MAX_DIGITS} dígitos
+              </FieldHint>
               {errors.telefone && <FieldError>{errors.telefone}</FieldError>}
             </Field>
           </FieldGroup>

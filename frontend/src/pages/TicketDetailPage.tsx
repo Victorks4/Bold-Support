@@ -1,12 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { INTERACAO_MAX_LENGTH } from '@/lib/constants/field-limits'
+import { clampText } from '@/lib/utils/input-masks'
 import { ArrowLeft, Bot, MessageSquare, Trash2, User } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PriorityBadge } from '@/components/tickets/PriorityBadge'
 import { StatusBadge } from '@/components/tickets/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { FieldHint } from '@/components/ui/field'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useAppData } from '@/lib/store/AppDataContext'
 import {
@@ -42,12 +46,21 @@ export function TicketDetailPage() {
     isLoading,
   } = useAppData()
   const ticket = id ? getTicketById(id) : undefined
+  const reducedMotion = useReducedMotion()
   const [mensagem, setMensagem] = useState('')
   const [registroCliente, setRegistroCliente] = useState('')
 
   useEffect(() => {
     if (id) void loadTicketDetail(id)
   }, [id, loadTicketDetail])
+
+  const interacoes = useMemo(
+    () =>
+      [...(ticket?.interacoes ?? [])].sort(
+        (a, b) => new Date(a.criado_em).getTime() - new Date(b.criado_em).getTime(),
+      ),
+    [ticket?.interacoes],
+  )
 
   if (isLoading && !ticket) {
     return <p className="text-app-muted py-12 text-center text-sm">Carregando chamado...</p>
@@ -65,9 +78,6 @@ export function TicketDetailPage() {
   }
 
   const allowedStatuses = STATUS_TRANSITIONS[ticket.status]
-  const interacoes = [...(ticket.interacoes ?? [])].sort(
-    (a, b) => new Date(a.criado_em).getTime() - new Date(b.criado_em).getTime(),
-  )
 
   async function handleStatusChange(status: TicketStatus) {
     try {
@@ -140,31 +150,49 @@ export function TicketDetailPage() {
               <p className="text-xs text-gray-500">Logs do chamado</p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {interacoes.map((item, index) => {
-                  const Icon = tipoIcon[item.tipo]
-                  return (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.06, duration: 0.3 }}
-                      className="flex gap-3"
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100">
-                        <Icon className="h-4 w-4 text-gray-500" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-app-heading">{tipoLabel[item.tipo]}</span>
-                          <span className="text-xs text-gray-400">{relativeTime(item.criado_em)}</span>
+              {interacoes.length === 0 ? (
+                <p className="text-center text-sm text-gray-400">Nenhuma interação registrada ainda.</p>
+              ) : (
+                <div className="space-y-4">
+                  {interacoes.map((item, index) => {
+                    const Icon = tipoIcon[item.tipo]
+                    const row = (
+                      <>
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                          <Icon className="h-4 w-4 text-gray-500" aria-hidden />
                         </div>
-                        <p className="mt-1 text-sm text-gray-600">{item.mensagem}</p>
-                      </div>
-                    </motion.div>
-                  )
-                })}
-              </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-semibold text-app-heading">{tipoLabel[item.tipo]}</span>
+                            <span className="text-xs text-gray-400">{relativeTime(item.criado_em)}</span>
+                          </div>
+                          <p className="mt-1 break-words text-sm text-gray-600">{item.mensagem}</p>
+                        </div>
+                      </>
+                    )
+
+                    if (reducedMotion) {
+                      return (
+                        <div key={item.id} className="flex gap-3">
+                          {row}
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.06, duration: 0.3 }}
+                        className="flex gap-3"
+                      >
+                        {row}
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -200,10 +228,15 @@ export function TicketDetailPage() {
               <form onSubmit={handleSendMessage} className="space-y-3">
                 <Textarea
                   value={mensagem}
-                  onChange={(e) => setMensagem(e.target.value)}
+                  onChange={(e) => setMensagem(clampText(e.target.value, INTERACAO_MAX_LENGTH))}
                   placeholder="Registre o que foi feito ou comunicado ao cliente..."
+                  maxLength={INTERACAO_MAX_LENGTH}
+                  aria-describedby="nota-agente-hint"
                   rows={4}
                 />
+                <FieldHint id="nota-agente-hint">
+                  {mensagem.length}/{INTERACAO_MAX_LENGTH} caracteres
+                </FieldHint>
                 <Button
                   type="submit"
                   className="h-10 w-full rounded-xl bg-[#006AFE] font-semibold text-white hover:bg-[#0058D6]"
@@ -223,10 +256,17 @@ export function TicketDetailPage() {
               <form onSubmit={handleClienteRegistro} className="space-y-3">
                 <Textarea
                   value={registroCliente}
-                  onChange={(e) => setRegistroCliente(e.target.value)}
+                  onChange={(e) =>
+                    setRegistroCliente(clampText(e.target.value, INTERACAO_MAX_LENGTH))
+                  }
                   placeholder="Ex.: Cliente retornou por e-mail confirmando resolução..."
+                  maxLength={INTERACAO_MAX_LENGTH}
+                  aria-describedby="registro-cliente-hint"
                   rows={3}
                 />
+                <FieldHint id="registro-cliente-hint">
+                  {registroCliente.length}/{INTERACAO_MAX_LENGTH} caracteres
+                </FieldHint>
                 <Button
                   type="submit"
                   variant="outline"

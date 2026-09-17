@@ -33,7 +33,7 @@ cp .env.example .env
 | `SUPABASE_URL` | URL do projeto Supabase |
 | `N8N_WEBHOOK_BASE_URL` | Base dos webhooks n8n (produção: `/webhook`) |
 
-> Não commite o arquivo `.env`. Ele está listado no `.gitignore`.
+> Não commite arquivos sensíveis ou gerados: `.env`, `.env.railway`, `.env.test`, `frontend/dist/`, `.firebase/` (todos no `.gitignore`).
 
 ## 4. Banco de dados
 
@@ -68,6 +68,17 @@ A migration `002_agentes.sql` cria um agente para login:
 
 ## 5. n8n - importar workflows
 
+### Opção A — script (Railway ou n8n com API)
+
+```bash
+cp .env.railway.example .env.railway
+# N8N_BASE_URL=https://seu-n8n.up.railway.app
+# N8N_API_KEY=... (Settings → API no n8n)
+npm run n8n:import
+```
+
+### Opção B — import manual na UI
+
 1. Acesse a instância n8n.
 2. **Import from File** para cada JSON em `n8n/workflows/`:
    - `POST_Clientes.json`
@@ -97,8 +108,8 @@ WHERE chave = 'jwt_secret';
 > Funciona no plano gratuito do n8n - o segredo fica no Postgres, não em Variables nem no servidor.
 > Os nodes JWT usam **HMAC-SHA256 em JavaScript puro** (sem `require('crypto')` nem `crypto.subtle`) - compatível com instâncias hospedadas restritas.
 
-4. Em **cada** node Postgres (incluindo `Buscar_jwt_secret`), vincule a credencial do banco (Session Pooler recomendado no Supabase).
-4. Nos nodes Postgres de **busca** (`Buscar_cliente`, `Buscar_ticket`, `Verificar_cliente`, `Listar_tickets`, `Buscar_interacoes`): ative **Always Output Data** nas configurações do node.
+5. Em **cada** node Postgres (incluindo `Buscar_jwt_secret`), vincule a credencial do banco (Session Pooler recomendado no Supabase).
+6. Nos nodes Postgres de **busca** (`Buscar_cliente`, `Buscar_ticket`, `Verificar_cliente`, `Listar_tickets`, `Buscar_interacoes`): ative **Always Output Data** nas configurações do node.
 
 ### Credencial Postgres (Supabase)
 
@@ -145,8 +156,9 @@ https://dev.boldsolution.com.br/webhook-test/<rota>
 ### Webhook externo (Etapa 2)
 
 1. Crie um endpoint em [webhook.site](https://webhook.site) e copie a URL.
-2. Configure `WEBHOOK_EXTERNO_URL` no n8n (variável de ambiente) ou edite o node `Webhook_externo` nos workflows.
-3. Ao alterar status ou excluir ticket, verifique o payload `{ protocolo, evento, status }` no webhook.site.
+2. A URL está nos nodes `Webhook_externo` dos workflows PATCH/DELETE/POST interação (ou use `WEBHOOK_EXTERNO_URL` no Railway).
+3. Ao alterar status, registrar interação ou excluir ticket, verifique o payload `{ protocolo, evento, status }` no webhook.site.
+4. No frontend, configure `VITE_WEBHOOK_SITE_TOKEN` com o UUID da URL para sincronizar `/eventos`.
 
 ## 7. Produção
 
@@ -228,6 +240,19 @@ npm run test:run
 npm install
 cp .env.test.example .env.test
 npm run test:api
+```
+
+## 12. Deploy em produção
+
+| Componente | URL | Guia |
+|------------|-----|------|
+| Backend (n8n) | `https://bold-support-production.up.railway.app` | [deployment-backend.md](deployment-backend.md) |
+| Frontend | https://bold-support.web.app | [deployment-frontend.md](deployment-frontend.md) |
+
+```bash
+npm run n8n:import          # atualizar workflows no Railway
+npm run build --prefix frontend
+firebase deploy --only hosting --project bold-support
 ```
 
 ### Todos os testes

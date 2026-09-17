@@ -23,6 +23,7 @@ interface AppDataContextValue {
   tickets: Ticket[]
   eventos: WebhookEvento[]
   isLoading: boolean
+  isRefreshing: boolean
   error: string | null
   actionError: string | null
   clearActionError: () => void
@@ -42,7 +43,7 @@ interface AppDataContextValue {
 const AppDataContext = createContext<AppDataContextValue | null>(null)
 
 const WEBHOOK_SITE_TOKEN = normalizeWebhookSiteToken(import.meta.env.VITE_WEBHOOK_SITE_TOKEN ?? '')
-const WEBHOOK_POLL_MS = 12_000
+const WEBHOOK_POLL_MS = 60_000
 
 function generateId(): string {
   return crypto.randomUUID()
@@ -57,9 +58,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [eventos, setEventos] = useState<WebhookEvento[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const knownWebhookIds = useRef(new Set<string>())
+  const hasLoadedOnce = useRef(false)
+  const clientesCountRef = useRef(0)
+  const ticketsCountRef = useRef(0)
+  clientesCountRef.current = clientes.length
+  ticketsCountRef.current = tickets.length
 
   const clearActionError = useCallback(() => setActionError(null), [])
 
@@ -133,7 +140,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, [tickets])
 
   const refresh = useCallback(async () => {
-    setIsLoading(true)
+    const initialLoad = !hasLoadedOnce.current
+    if (initialLoad) {
+      setIsLoading(true)
+    } else {
+      setIsRefreshing(true)
+    }
     setError(null)
 
     const [clientesResult, ticketsResult] = await Promise.allSettled([
@@ -145,7 +157,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
     if (clientesResult.status === 'fulfilled') {
       setClientes(clientesResult.value)
-    } else {
+    } else if (initialLoad || clientesCountRef.current === 0) {
       const message =
         clientesResult.reason instanceof ApiError
           ? clientesResult.reason.message
@@ -156,7 +168,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
     if (ticketsResult.status === 'fulfilled') {
       setTickets(ticketsResult.value)
-    } else {
+    } else if (initialLoad || ticketsCountRef.current === 0) {
       const message =
         ticketsResult.reason instanceof ApiError
           ? ticketsResult.reason.message
@@ -169,7 +181,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setError(errors.join(' '))
     }
 
+    hasLoadedOnce.current = true
     setIsLoading(false)
+    setIsRefreshing(false)
   }, [])
 
   useEffect(() => {
@@ -239,7 +253,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     clearActionError()
     try {
       const ticket = await ticketsApi.createTicket(input)
-      setTickets((prev) => sortByPrioridade([ticket, ...prev]))
+      setTickets((prev) =>
+        sortByPrioridade([ticket, ...prev.filter((item) => item.id !== ticket.id)]),
+      )
+      void refresh()
       logger.info('ticket_created', { id: ticket.id, protocolo: ticket.protocolo })
       return ticket
     } catch (err) {
@@ -250,7 +267,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       }
       throw err
     }
-  }, [clearActionError])
+  }, [clearActionError, refresh])
 
   const loadTicketDetail = useCallback(
     async (ticketId: string) => {
@@ -366,6 +383,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       tickets,
       eventos,
       isLoading,
+      isRefreshing,
       error,
       actionError,
       clearActionError,
@@ -386,6 +404,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       tickets,
       eventos,
       isLoading,
+      isRefreshing,
       error,
       actionError,
       clearActionError,

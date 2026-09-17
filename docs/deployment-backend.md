@@ -152,6 +152,18 @@ WHERE chave = 'jwt_secret';
 
 ## Passo 8 - Importar e ativar workflows
 
+### Opção A — script automatizado (recomendado)
+
+```bash
+cp .env.railway.example .env.railway
+# Preencha N8N_BASE_URL e N8N_API_KEY (n8n → Settings → API)
+npm run n8n:import
+```
+
+O script atualiza workflows existentes (PUT), preserva credenciais Postgres, remove duplicatas e ativa workflows inativos.
+
+### Opção B — import manual
+
 Importe **todos** os 11 JSONs de `n8n/workflows/`:
 
 - `POST_Auth_Login.json`
@@ -236,10 +248,8 @@ npm run test:api
 
 ## Proximo passo: Firebase (frontend)
 
-Apos o backend validado no Railway, configure no build do Firebase:
+Apos o backend validado no Railway, faça o deploy do console:
 
-```env
-VITE_N8N_WEBHOOK_BASE_URL=https://SEU-SERVICO.up.railway.app/webhook
-```
+**Guia completo:** [deployment-frontend.md](deployment-frontend.md)
 
-Guia do frontend: em breve em `docs/deployment-frontend.md`.
+Produção atual: https://bold-support.web.app
