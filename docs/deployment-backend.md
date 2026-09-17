@@ -228,6 +228,7 @@ npm run test:api
 | Webhook 404 | Workflow inativo | Ative o workflow no n8n |
 | 401 TOKEN_INVALIDO | `jwt_secret` diferente | Confira `app_config` no Supabase |
 | CORS no browser | `N8N_CORS_ORIGIN` ausente | Adicione dominio Firebase |
+| CORS `PATCH`/`DELETE` bloqueado (Firebase) | Bug n8n &lt; 1.109 em paths com `:id` | Atualize imagem para `n8nio/n8n:1.109.0+` e redeploy |
 | Postgres node falha | Credencial errada | Session Pooler + SSL Allow |
 | URL webhook errada | `WEBHOOK_URL` desatualizada | Atualize e redeploy |
 

@@ -1,6 +1,7 @@
 # n8n para Railway - Bold Support
 # Docker Hub evita rate limit (429) do registry docker.n8n.io no Railway
-FROM n8nio/n8n:1.70.1
+# 1.109+ corrige CORS preflight em webhooks com path dinâmico (:id) — PATCH/DELETE no browser
+FROM n8nio/n8n:1.123.80
 
 # Porta fixa: no Railway use Generate Domain com porta 5678
 ENV N8N_PORT=5678
