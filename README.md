@@ -14,7 +14,7 @@ Sistema de chamados (tickets) para suporte ao cliente. Backend em **n8n**, persi
 
 ## Visão geral
 
-O Bold Support permite que agentes Bold cadastrem clientes, abram e gerenciem chamados, acompanhem a fila de atendimento e registrem interações — com API HTTP para integrações externas via webhook.
+O Bold Support permite que agentes Bold cadastrem clientes, abram e gerenciem chamados, acompanhem a fila de atendimento e registrem interações, com API HTTP para integrações externas via webhook.
 
 ```mermaid
 flowchart LR
@@ -48,7 +48,7 @@ Detalhes: [**docs/architecture.md**](docs/architecture.md)
 
 ## Funcionalidades por etapa
 
-### Etapa 1 — API básica
+### Etapa 1 - API básica
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -59,7 +59,7 @@ Detalhes: [**docs/architecture.md**](docs/architecture.md)
 | GET | `/tickets/listar` | Listar tickets (filtro por status e/ou prioridade) |
 | GET | `/tickets/id/:id` | Consultar ticket com histórico de interações |
 
-### Etapa 2 — Regras de negócio e integração
+### Etapa 2 - Regras de negócio e integração
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -67,9 +67,9 @@ Detalhes: [**docs/architecture.md**](docs/architecture.md)
 | DELETE | `/tickets/remover/:id` | Remover ticket (CASCADE nas interações) |
 | PATCH | `/tickets/atualizar-status/:id` | Atualizar status com matriz de transições |
 | POST | `/tickets/adicionar-interacao/:id` | Adicionar interação (`cliente` / `agente`) |
-| — | Webhook HTTP externo | `status_alterado`, `interacao_adicionada`, `ticket_excluido` |
+| - | Webhook HTTP externo | `status_alterado`, `interacao_adicionada`, `ticket_excluido` |
 
-### Etapa 3 — Console do agente (frontend)
+### Etapa 3 - Console do agente (frontend)
 
 | Rota | Tela |
 |------|------|
@@ -83,15 +83,15 @@ Detalhes: [**docs/architecture.md**](docs/architecture.md)
 
 - Integração real com API n8n (`AppDataContext`, `lib/api/`)
 - Tema claro/escuro, layout responsivo, code splitting e lazy loading
-- Validações: telefone 10–11 dígitos, descrição até 1000 caracteres
+- Validações: telefone 10-11 dígitos, descrição até 1000 caracteres
 - Atualização otimista ao registrar interações no detalhe do chamado
 
-### Etapa 4 — Autenticação JWT
+### Etapa 4 - Autenticação JWT
 
 | Método | Rota | Auth |
 |--------|------|------|
 | POST | `/auth/login` | Pública |
-| Demais rotas | — | `Authorization: Bearer <token>` |
+| Demais rotas | - | `Authorization: Bearer <token>` |
 
 - JWT HS256 gerado e validado no n8n (`jwt_secret` em `app_config`)
 - `AuthContext`, rotas protegidas, logout e redirect em token expirado
@@ -108,7 +108,7 @@ Checklist completo: [**docs/entregas.md**](docs/entregas.md)
 | [`stage/02-ticket-operations`](../../tree/stage/02-ticket-operations) | DELETE, PATCH, interações, webhook | Concluída |
 | [`stage/03-frontend`](../../tree/stage/03-frontend) | Console React do agente | Concluída |
 | [`stage/04-authentication`](../../tree/stage/04-authentication) | Autenticação JWT | Concluída |
-| `main` | Última etapa estável | Etapas 1–4 integradas |
+| `main` | Última etapa estável | Etapas 1-4 integradas |
 
 ```bash
 git checkout stage/01-core-api            # revisar só a Etapa 1
@@ -249,7 +249,7 @@ docker compose up -d    # http://localhost:5678
 
 | Método | Rota | Workflow | Auth |
 |--------|------|----------|------|
-| POST | `/auth/login` | `POST_Auth_Login.json` | — |
+| POST | `/auth/login` | `POST_Auth_Login.json` | - |
 | GET | `/clientes` | `GET_Clientes.json` | JWT |
 | POST | `/clientes` | `POST_Clientes.json` | JWT |
 | GET | `/clientes/id/:id` | `GET_Cliente_por_ID.json` | JWT |
@@ -273,7 +273,7 @@ Webhook_1 → Extrair_token → Validar_JWT → Validar_payload → IF → Postg
 - SQL parametrizado (`$1`, `$2`) nos nodes Postgres
 - JWT em JS puro: `n8n/snippets/jwt-pure-inline.js`
 
-Documentação: [**docs/api.md**](docs/api.md) · OpenAPI: [**docs/openapi.yaml**](docs/openapi.yaml) · Postman: `postman/`
+Documentação: [**docs/api.md**](docs/api.md) | OpenAPI: [**docs/openapi.yaml**](docs/openapi.yaml) | Postman: `postman/`
 
 ---
 
@@ -301,7 +301,7 @@ Diagrama ER e constraints: [**docs/database.md**](docs/database.md)
 
 ```
 Bold-Support/
-├── database/migrations/          # Schema SQL (001–003)
+├── database/migrations/          # Schema SQL (001-003)
 ├── deploy/n8n/
 │   ├── Dockerfile                # n8n 1.123+ (CORS PATCH/DELETE)
 │   └── docker-compose.yml        # Teste local
@@ -348,7 +348,7 @@ Frontend detalhado: [**frontend/README.md**](frontend/README.md)
 
 ## Variáveis de ambiente
 
-### Backend (raiz — `.env`)
+### Backend (raiz - `.env`)
 
 | Variável | Descrição |
 |----------|-----------|
@@ -364,7 +364,7 @@ Frontend detalhado: [**frontend/README.md**](frontend/README.md)
 | `VITE_N8N_WEBHOOK_BASE_URL` | Base dos webhooks (`/webhook` em dev com proxy Vite) |
 | `VITE_WEBHOOK_SITE_TOKEN` | (Opcional) UUID webhook.site para `/eventos` |
 
-### Railway (import workflows — `.env.railway`)
+### Railway (import workflows - `.env.railway`)
 
 | Variável | Descrição |
 |----------|-----------|
@@ -390,9 +390,9 @@ Frontend detalhado: [**frontend/README.md**](frontend/README.md)
 
 ## Limitações conhecidas
 
-- URLs n8n podem misturar path simples e path com `webhookId` — usar Production URL de cada workflow.
+- URLs n8n podem misturar path simples e path com `webhookId`; usar Production URL de cada workflow.
 - Paths da Etapa 2 usam prefixos únicos (`remover`, `atualizar-status`, `adicionar-interacao`).
-- Webhook externo com `continueOnFail` — falha não bloqueia a operação principal.
+- Webhook externo com `continueOnFail`: falha não bloqueia a operação principal.
 - Produto focado no console do agente; sem portal self-service para o cliente final.
 
 ---
