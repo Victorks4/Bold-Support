@@ -199,7 +199,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ $json }}",
+        "responseBody": "={{ $('Inserir_interacao').first().json }}",
         "options": {
           "responseCode": 201
         }
@@ -424,7 +424,12 @@
       "main": [
         [
           {
-            "node": "Responde_201",
+            "node": "Atualizar_ticket",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Webhook_externo",
             "type": "main",
             "index": 0
           }
@@ -433,29 +438,23 @@
     },
     "Atualizar_ticket": {
       "main": [
-        []
+        [
+          {
+            "node": "Responde_201",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Webhook_externo": {
       "main": [
-        [
-          {
-            "node": "Atualizar_ticket",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Responde_201": {
       "main": [
-        [
-          {
-            "node": "Webhook_externo",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Extrair_token": {

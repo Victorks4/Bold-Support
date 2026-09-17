@@ -332,25 +332,71 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     async (ticketId: string, tipo: InteracaoTipo, mensagem: string) => {
       clearActionError()
       const ticket = tickets.find((t) => t.id === ticketId)
+      if (!ticket) return
+
+      const optimisticId = `pending-${crypto.randomUUID()}`
+      const optimisticInteracao = {
+        id: optimisticId,
+        ticket_id: ticketId,
+        tipo,
+        mensagem,
+        criado_em: new Date().toISOString(),
+      }
+
+      setTickets((prev) =>
+        prev.map((t) =>
+          t.id === ticketId
+            ? {
+                ...t,
+                atualizado_em: optimisticInteracao.criado_em,
+                interacoes: [...(t.interacoes ?? []), optimisticInteracao],
+              }
+            : t,
+        ),
+      )
+
       try {
-        await ticketsApi.addTicketInteracao(ticketId, tipo, mensagem)
-        const refreshed = (await loadTicketDetail(ticketId)) ?? ticket
-        if (refreshed && (tipo === 'agente' || tipo === 'cliente')) {
-          pushWebhookEvent('interacao_adicionada', refreshed, {
-            protocolo: refreshed.protocolo,
+        const interacao = await ticketsApi.addTicketInteracao(ticketId, tipo, mensagem)
+        setTickets((prev) =>
+          prev.map((t) => {
+            if (t.id !== ticketId) return t
+            const interacoes = (t.interacoes ?? []).map((item) =>
+              item.id === optimisticId ? interacao : item,
+            )
+            return {
+              ...t,
+              atualizado_em: interacao.criado_em,
+              interacoes,
+            }
+          }),
+        )
+
+        if (tipo === 'agente' || tipo === 'cliente') {
+          pushWebhookEvent('interacao_adicionada', ticket, {
+            protocolo: ticket.protocolo,
             evento: 'interacao_adicionada',
-            status: refreshed.status,
+            status: ticket.status,
           })
         }
         logger.info('interacao_added', { ticketId, tipo })
       } catch (err) {
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === ticketId
+              ? {
+                  ...t,
+                  interacoes: (t.interacoes ?? []).filter((item) => item.id !== optimisticId),
+                }
+              : t,
+          ),
+        )
         const message =
           err instanceof ApiError ? err.message : 'Não foi possível registrar a interação.'
         setActionError(message)
         throw err
       }
     },
-    [tickets, loadTicketDetail, pushWebhookEvent, clearActionError],
+    [tickets, pushWebhookEvent, clearActionError],
   )
 
   const removeTicket = useCallback(

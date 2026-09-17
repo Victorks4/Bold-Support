@@ -49,6 +49,8 @@ export function TicketDetailPage() {
   const reducedMotion = useReducedMotion()
   const [mensagem, setMensagem] = useState('')
   const [registroCliente, setRegistroCliente] = useState('')
+  const [enviandoNota, setEnviandoNota] = useState(false)
+  const [enviandoRegistro, setEnviandoRegistro] = useState(false)
 
   useEffect(() => {
     if (id) void loadTicketDetail(id)
@@ -89,16 +91,32 @@ export function TicketDetailPage() {
 
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault()
-    if (!mensagem.trim()) return
-    await addInteracao(ticket!.id, 'agente', mensagem.trim())
+    const texto = mensagem.trim()
+    if (!texto || enviandoNota) return
+    setEnviandoNota(true)
     setMensagem('')
+    try {
+      await addInteracao(ticket!.id, 'agente', texto)
+    } catch {
+      setMensagem(texto)
+    } finally {
+      setEnviandoNota(false)
+    }
   }
 
   async function handleClienteRegistro(e: React.FormEvent) {
     e.preventDefault()
-    if (!registroCliente.trim()) return
-    await addInteracao(ticket!.id, 'cliente', registroCliente.trim())
+    const texto = registroCliente.trim()
+    if (!texto || enviandoRegistro) return
+    setEnviandoRegistro(true)
     setRegistroCliente('')
+    try {
+      await addInteracao(ticket!.id, 'cliente', texto)
+    } catch {
+      setRegistroCliente(texto)
+    } finally {
+      setEnviandoRegistro(false)
+    }
   }
 
   async function handleRemove() {
@@ -233,15 +251,17 @@ export function TicketDetailPage() {
                   maxLength={INTERACAO_MAX_LENGTH}
                   aria-describedby="nota-agente-hint"
                   rows={4}
+                  disabled={enviandoNota}
                 />
                 <FieldHint id="nota-agente-hint">
                   {mensagem.length}/{INTERACAO_MAX_LENGTH} caracteres
                 </FieldHint>
                 <Button
                   type="submit"
-                  className="h-10 w-full rounded-xl bg-[#006AFE] font-semibold text-white hover:bg-[#0058D6]"
+                  disabled={enviandoNota || !mensagem.trim()}
+                  className="h-10 w-full rounded-xl bg-[#006AFE] font-semibold text-white hover:bg-[#0058D6] disabled:opacity-60"
                 >
-                  Enviar
+                  {enviandoNota ? 'Enviando...' : 'Enviar'}
                 </Button>
               </form>
             </CardContent>
@@ -263,6 +283,7 @@ export function TicketDetailPage() {
                   maxLength={INTERACAO_MAX_LENGTH}
                   aria-describedby="registro-cliente-hint"
                   rows={3}
+                  disabled={enviandoRegistro}
                 />
                 <FieldHint id="registro-cliente-hint">
                   {registroCliente.length}/{INTERACAO_MAX_LENGTH} caracteres
@@ -270,9 +291,10 @@ export function TicketDetailPage() {
                 <Button
                   type="submit"
                   variant="outline"
-                  className="h-10 w-full rounded-xl border-gray-200 font-semibold"
+                  disabled={enviandoRegistro || !registroCliente.trim()}
+                  className="h-10 w-full rounded-xl border-gray-200 font-semibold disabled:opacity-60"
                 >
-                  Registrar
+                  {enviandoRegistro ? 'Registrando...' : 'Registrar'}
                 </Button>
               </form>
             </CardContent>

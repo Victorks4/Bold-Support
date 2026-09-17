@@ -58,6 +58,37 @@ export function parseTicket(data: unknown): Ticket {
   return ticket
 }
 
+export function parseInteracao(data: unknown, fallbackTicketId?: string): Interacao {
+  if (!data || typeof data !== 'object') {
+    throw new ApiError('Resposta inválida da interação.', 'RESPOSTA_INVALIDA', 502)
+  }
+
+  const row = data as Record<string, unknown>
+  if (!row.id || !row.tipo || row.mensagem == null) {
+    throw new ApiError('Resposta inválida da interação.', 'RESPOSTA_INVALIDA', 502)
+  }
+
+  const toIso = (value: unknown) => {
+    if (value == null || value === '') return new Date().toISOString()
+    if (typeof value === 'string') return value
+    const parsed = new Date(value as string | number | Date)
+    return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString()
+  }
+
+  const ticketId = row.ticket_id ? String(row.ticket_id) : fallbackTicketId
+  if (!ticketId) {
+    throw new ApiError('Resposta inválida da interação.', 'RESPOSTA_INVALIDA', 502)
+  }
+
+  return {
+    id: String(row.id),
+    ticket_id: ticketId,
+    tipo: String(row.tipo) as InteracaoTipo,
+    mensagem: String(row.mensagem),
+    criado_em: toIso(row.criado_em),
+  }
+}
+
 function parseInteracoes(
   value: unknown,
   ticketId: string,

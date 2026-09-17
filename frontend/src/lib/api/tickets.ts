@@ -1,6 +1,7 @@
 import { apiFetch, buildWebhookUrl, webhookPaths } from './client'
 import { parseTicket } from './ticket-parse'
-import type { InteracaoTipo, Ticket, TicketInput, TicketStatus } from '@/lib/types/ticket'
+import { parseInteracao } from './ticket-parse'
+import type { Interacao, InteracaoTipo, Ticket, TicketInput, TicketStatus } from '@/lib/types/ticket'
 import { sortByPrioridade } from '@/lib/utils/ticket-sort'
 
 type ListTicketsResponse = {
@@ -78,12 +79,13 @@ export async function addTicketInteracao(
   id: string,
   tipo: InteracaoTipo,
   mensagem: string,
-): Promise<unknown> {
+): Promise<Interacao> {
   const url = buildWebhookUrl(webhookPaths.postInteracao(id))
-  return apiFetch(url, {
+  const data = await apiFetch<unknown>(url, {
     method: 'POST',
     body: JSON.stringify({ tipo, mensagem }),
   })
+  return parseInteracao(data, id)
 }
 
 export async function deleteTicket(id: string): Promise<void> {
