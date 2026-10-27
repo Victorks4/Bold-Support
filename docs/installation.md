@@ -142,7 +142,7 @@ https://dev.boldsolution.com.br/webhook-test/<rota>
 ### Webhook externo (Etapa 2)
 
 1. Crie um endpoint em [webhook.site](https://webhook.site) e copie a URL.
-2. A URL está nos nodes `Webhook_externo` dos workflows PATCH/DELETE/POST interação (ou use `WEBHOOK_EXTERNO_URL` no Railway).
+2. Defina `WEBHOOK_EXTERNO_URL` no Railway (e em `.env` local). Os workflows PATCH/DELETE/POST interacao leem essa variavel nos nodes `Webhook_externo`.
 3. Ao alterar status, registrar interação ou excluir ticket, verifique o payload `{ protocolo, evento, status }` no webhook.site.
 4. No frontend, configure `VITE_WEBHOOK_SITE_TOKEN` com o UUID da URL para sincronizar `/eventos`.
 

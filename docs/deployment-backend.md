@@ -101,7 +101,7 @@ No servico n8n -> **Variables**. Use **Add Reference** para o Postgres Railway o
 ## Passo 5 - Dominio publico
 
 1. Servico n8n -> **Settings** -> **Networking** -> **Generate Domain**
-2. Anote a URL: `https://bold-support-production.up.railway.app`
+2. Anote a URL: `https://SEU-SERVICO.up.railway.app`
 3. Atualize `N8N_HOST`, `WEBHOOK_URL` e `N8N_EDITOR_BASE_URL` com essa URL
 4. **Redeploy** o servico
 

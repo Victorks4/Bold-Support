@@ -179,14 +179,14 @@ git checkout stage/03-frontend
 |------------|-----|------|
 | Backend n8n (Railway) | https://bold-support-production.up.railway.app | [deployment-backend.md](deployment-backend.md) |
 | Frontend (Firebase) | https://bold-support.web.app | [deployment-frontend.md](deployment-frontend.md) |
-| Webhook externo | webhook.site (configurado nos workflows) | [installation.md](installation.md) |
+| Webhook externo | webhook.site via `WEBHOOK_EXTERNO_URL` no Railway | [installation.md](installation.md) |
 
 ### Checklist deploy
 
 - [x] n8n 1.123+ no Railway (CORS PATCH/DELETE)
 - [x] `npm run n8n:import` — 11 workflows com Postgres
 - [x] Firebase Hosting (`firebase.json`, `.firebaserc`)
-- [x] `frontend/.env.production` com URLs Railway + webhook.site
+- [x] `frontend/.env.production` com placeholders (valores reais so no build local)
 - [x] Scripts `import-n8n-workflows.mjs` e `fix-n8n-if-nodes.mjs`
 - [x] Validação frontend: telefone 11 dígitos, descrição 1000 chars
 - [x] Lazy loading + code splitting no frontend

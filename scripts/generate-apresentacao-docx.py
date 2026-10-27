@@ -71,7 +71,7 @@ def main() -> None:
         doc,
         [
             "App: https://bold-support.web.app",
-            "API: https://bold-support-production.up.railway.app/webhook",
+            "API: https://your-service.up.railway.app/webhook",
             "Repositório: github.com/Victorks4/Bold-Support",
             "Login teste: agente@bold.com / Bold@2026",
         ],

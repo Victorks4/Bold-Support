@@ -30,11 +30,11 @@ O Firebase serve apenas arquivos estáticos (`frontend/dist`). Toda a API passa 
 
 ## Variáveis de build
 
-Arquivo `frontend/.env.production` (versionado — contém apenas URLs públicas):
+Arquivo `frontend/.env.production` (placeholders no repo; preencha localmente antes do build):
 
 ```env
-VITE_N8N_WEBHOOK_BASE_URL=https://bold-support-production.up.railway.app/webhook
-VITE_WEBHOOK_SITE_TOKEN=<uuid-do-webhook.site>
+VITE_N8N_WEBHOOK_BASE_URL=https://your-service.up.railway.app/webhook
+VITE_WEBHOOK_SITE_TOKEN=
 ```
 
 | Variável | Descrição |
