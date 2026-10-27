@@ -49,13 +49,15 @@ function loadEnvFile(filePath) {
 
 loadEnvFile(join(rootDir, '.env.railway'))
 
-const baseUrl = (process.env.N8N_BASE_URL ?? 'https://bold-support-production.up.railway.app').replace(
-  /\/$/,
-  '',
-)
+const baseUrl = (process.env.N8N_BASE_URL ?? '').replace(/\/$/, '')
 const apiKey = process.env.N8N_API_KEY
-const credentialName = (process.env.N8N_POSTGRES_CREDENTIAL_NAME ?? 'Bold Support - Supabase').trim()
+const credentialName = (process.env.N8N_POSTGRES_CREDENTIAL_NAME ?? 'Bold Support - Postgres').trim()
 const credentialIdFromEnv = process.env.N8N_POSTGRES_CREDENTIAL_ID?.trim()
+
+if (!baseUrl) {
+  console.error('Defina N8N_BASE_URL em .env.railway (veja .env.railway.example)')
+  process.exit(1)
+}
 
 if (!apiKey) {
   console.error('Defina N8N_API_KEY em .env.railway (veja .env.railway.example)')
@@ -253,7 +255,7 @@ async function main() {
 
   const fallbackCredential = await findPostgresCredentialFallback()
   if (fallbackCredential) {
-    console.log(`Fallback Postgres: ${fallbackCredential.name} (${fallbackCredential.id})`)
+    console.log(`Fallback Postgres: ${fallbackCredential.name}`)
   }
 
   console.log('Verificando duplicatas...')

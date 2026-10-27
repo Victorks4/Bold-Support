@@ -1,6 +1,6 @@
 # Bold Support
 
-Sistema de chamados (tickets) para suporte ao cliente. Backend em **n8n**, persistência em **PostgreSQL** (Supabase) e console web para agentes em **React**.
+Sistema de chamados (tickets) para suporte ao cliente. Backend em **n8n**, persistência em **PostgreSQL** e console web para agentes em **React**.
 
 | Ambiente | URL |
 |----------|-----|
@@ -21,12 +21,12 @@ flowchart LR
   Browser[Navegador React]
   Firebase[Firebase Hosting]
   N8N[n8n Railway]
-  Supabase[(Supabase Postgres)]
+  AppDB[(PostgreSQL)]
   Webhook[webhook.site]
 
   Browser --> Firebase
   Browser -->|HTTPS /webhook| N8N
-  N8N --> Supabase
+  N8N --> AppDB
   N8N -.->|eventos opcionais| Webhook
 ```
 
@@ -36,7 +36,7 @@ flowchart LR
 | Hosting | Firebase Hosting | Arquivos estáticos (`frontend/dist`) |
 | Backend | n8n 1.123+ (webhooks) | Orquestração, validação, JWT, resposta HTTP |
 | Deploy backend | Railway + Docker | Instância n8n própria |
-| Banco da app | PostgreSQL / Supabase | Clientes, tickets, interações, agentes |
+| Banco da app | PostgreSQL | Clientes, tickets, interações, agentes |
 | Banco do n8n | PostgreSQL Railway | Metadados do n8n (workflows, credenciais) |
 | Testes | Vitest + Newman | 47 testes frontend + integração API |
 
@@ -124,7 +124,7 @@ git checkout stage/04-authentication      # revisar Etapa 4
 ### Pré-requisitos
 
 - Node.js 20+
-- Conta Supabase (ou PostgreSQL 14+)
+- PostgreSQL 14+ (local ou hospedado)
 - Instância n8n (local, Railway ou Bold Solution)
 - Postman (opcional)
 
@@ -148,7 +148,7 @@ cd frontend && cp .env.example .env
 
 | Arquivo | Uso |
 |---------|-----|
-| `.env` | Desenvolvimento local (Supabase, URLs n8n) |
+| `.env` | Desenvolvimento local (DATABASE_URL, URLs n8n) |
 | `.env.test` | Testes Newman (`API_BASE_URL`, credenciais do agente) |
 | `.env.railway` | Import de workflows via API (`cp .env.railway.example .env.railway`) |
 | `frontend/.env` | Dev local (proxy Vite `/webhook`) |
@@ -352,8 +352,7 @@ Frontend detalhado: [**frontend/README.md**](frontend/README.md)
 
 | Variável | Descrição |
 |----------|-----------|
-| `DATABASE_URL` | Connection string PostgreSQL (Supabase) |
-| `SUPABASE_URL` | URL do projeto Supabase |
+| `DATABASE_URL` | Connection string PostgreSQL |
 | `N8N_WEBHOOK_BASE_URL` | Base dos webhooks n8n |
 | `WEBHOOK_EXTERNO_URL` | URL do webhook externo (webhook.site) |
 
@@ -377,7 +376,7 @@ Frontend detalhado: [**frontend/README.md**](frontend/README.md)
 
 | Documento | Conteúdo |
 |-----------|----------|
-| [installation.md](docs/installation.md) | Setup Supabase, n8n, Postman, JWT |
+| [installation.md](docs/installation.md) | Setup PostgreSQL, n8n, Postman, JWT |
 | [architecture.md](docs/architecture.md) | Camadas, fluxos, convenções n8n |
 | [api.md](docs/api.md) | Contrato HTTP completo |
 | [database.md](docs/database.md) | Modelo relacional |

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Bold Support API
-  description: API de chamados - backend em n8n (webhooks) + PostgreSQL (Supabase)
+  description: API de chamados - backend em n8n (webhooks) + PostgreSQL
   version: 3.0.0
 
 servers:

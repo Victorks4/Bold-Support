@@ -1,4 +1,4 @@
-/** Limites de campos alinhados ao backend (n8n / Supabase). */
+/** Limites de campos alinhados ao backend (n8n / PostgreSQL). */
 export const TELEFONE_MAX_DIGITS = 11
 export const TELEFONE_MIN_DIGITS = 10
 export const DESCRICAO_MAX_LENGTH = 1000

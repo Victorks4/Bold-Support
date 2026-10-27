@@ -46,7 +46,7 @@ cp .env.test.example .env.test
 
 | Variável | Motivo |
 |----------|--------|
-| `DATABASE_URL` / `SUPABASE_URL` | Testes passam pelo n8n |
+| `DATABASE_URL` | Testes passam pelo n8n (nao precisa no .env.test) |
 | `jwt_secret` | Lido pelo n8n via `app_config` |
 | `VITE_*` | Só para build/dev do frontend |
 
@@ -71,6 +71,6 @@ scripts/run-api-tests.mjs
 
 ## Limitações
 
-- Testes de API criam dados reais no Supabase
+- Testes de API criam dados reais no banco PostgreSQL da aplicacao
 - Etapa 2 remove ticket/cliente criados na Etapa 1
 - Dependem da instância n8n da Bold estar online

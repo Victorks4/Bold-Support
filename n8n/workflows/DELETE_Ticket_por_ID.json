@@ -146,7 +146,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://webhook.site/11a466f4-4072-4933-9a03-6d01af6fde27",
+        "url": "={{ $env.WEBHOOK_EXTERNO_URL }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { protocolo: $json.protocolo, evento: 'ticket_excluido', status: $json.status } }}",

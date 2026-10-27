@@ -1,6 +1,6 @@
 ---
 name: bold-support
-description: Contexto completo do desafio Bold Support - stack n8n+Supabase, convenções de workflows, etapas de entrega, branches Git, bugs conhecidos e checklist da Etapa 2. Use antes de implementar rotas, documentar ou continuar entregas.
+description: Contexto completo do desafio Bold Support - stack n8n+PostgreSQL, convenções de workflows, etapas de entrega, branches Git, bugs conhecidos e checklist da Etapa 2. Use antes de implementar rotas, documentar ou continuar entregas.
 ---
 
 # Bold Support - Contexto do Projeto
@@ -24,17 +24,17 @@ Skill de continuidade para o desafio técnico FullStack **Bold Solution**. Leia 
 | Camada | Tecnologia | Notas |
 |--------|------------|-------|
 | Backend | **n8n** (webhooks) | **NÃO usar NestJS** |
-| Banco | PostgreSQL / **Supabase** | Projeto `bold-support`, região `us-west-2` |
+| Banco | **PostgreSQL** | Migrations em `database/migrations/` |
 | Testes frontend | Vitest + Testing Library | npm run test:frontend |\n| Testes API | Newman (Postman CLI) | npm run test:api |
 | Frontend | React + Vite em `frontend/` | Login implementado; dashboard pendente |
 
 ## Infraestrutura
 
-### Supabase
+### PostgreSQL
 
-- Migration aplicada: `database/migrations/001_initial_schema.sql`
-- Tabelas: `clientes`, `tickets`, `interacoes`
-- Credencial Postgres no n8n: usar **Session Pooler** (`aws-0-us-west-2.pooler.supabase.com`), não conexão direta IPv6
+- Migrations: `001_initial_schema.sql`, `002_agentes.sql`, `003_app_config.sql`
+- Tabelas: `clientes`, `tickets`, `interacoes`, `agentes`, `app_config`
+- Credencial Postgres no n8n: dados de conexao do `DATABASE_URL` (SSL conforme provedor)
 
 ### n8n hospedado
 
@@ -46,7 +46,7 @@ Paths Etapa 2 (únicos no n8n): `clientes/remover/:id`, `tickets/remover/:id`, `
 
 ### Variáveis (.env.example)
 
-- `DATABASE_URL`, `SUPABASE_URL`, `N8N_WEBHOOK_BASE_URL`
+- `DATABASE_URL`, `N8N_WEBHOOK_BASE_URL`, `WEBHOOK_EXTERNO_URL`
 
 ## Convenções de workflows n8n
 
@@ -159,7 +159,7 @@ Bold-Support/
 - `docs/entregas.md` - branches e checklist por etapa
 - `docs/api.md` - endpoints e códigos de erro
 - `docs/architecture.md` - fluxos e diagramas
-- `docs/installation.md` - setup Supabase + n8n + Postman
+- `docs/installation.md` - setup PostgreSQL + n8n + Postman
 - `docs/testing.md` - testes automatizados (Vitest + Newman)
 - `docs/openapi.yaml` - contrato OpenAPI
 

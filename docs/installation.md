@@ -7,10 +7,10 @@ Guia para configurar o ambiente após clonar o repositório.
 | Ferramenta | Finalidade |
 |------------|------------|
 | **Node.js 20+** e npm | Frontend React (`frontend/`) |
-| Conta **Supabase** (ou PostgreSQL 14+) | Banco de dados |
+| **PostgreSQL 14+** | Banco de dados |
 | Acesso ao **n8n** (instância Bold Solution) | Backend / webhooks |
 | **Postman** (ou curl) | Testes manuais da API |
-| `psql` ou SQL Editor do Supabase | Aplicar migration |
+| `psql` ou cliente SQL do provedor | Aplicar migration |
 
 ## 2. Clone do repositório
 
@@ -29,23 +29,15 @@ cp .env.example .env
 
 | Variável | Descrição |
 |----------|-----------|
-| `DATABASE_URL` | Connection string PostgreSQL (Session Pooler no Supabase) |
-| `SUPABASE_URL` | URL do projeto Supabase |
-| `N8N_WEBHOOK_BASE_URL` | Base dos webhooks n8n (produção: `/webhook`) |
+| `DATABASE_URL` | Connection string PostgreSQL |
+| `N8N_WEBHOOK_BASE_URL` | Base dos webhooks n8n (producao: `/webhook`) |
+| `WEBHOOK_EXTERNO_URL` | URL do webhook externo (Etapa 2, opcional) |
 
 > Não commite arquivos sensíveis ou gerados: `.env`, `.env.railway`, `.env.test`, `frontend/dist/`, `.firebase/` (todos no `.gitignore`).
 
 ## 4. Banco de dados
 
-### Opção A - Supabase SQL Editor
-
-1. Crie um projeto no Supabase.
-2. Abra **SQL Editor**.
-3. Cole o conteúdo de `database/migrations/001_initial_schema.sql` e execute.
-4. Cole o conteúdo de `database/migrations/002_agentes.sql` e execute.
-5. Cole o conteúdo de `database/migrations/003_app_config.sql` e execute.
-
-### Opção B - psql
+### Opção A - psql (recomendado)
 
 ```bash
 psql "$DATABASE_URL" -f database/migrations/001_initial_schema.sql
@@ -92,7 +84,7 @@ npm run n8n:import
    - `PATCH_Ticket_Status.json`
    - `POST_Ticket_Interacao.json`
    - `POST_Auth_Login.json`
-3. Rode a migration `database/migrations/003_app_config.sql` no Supabase e **altere o `jwt_secret`**:
+3. Rode a migration `database/migrations/003_app_config.sql` no banco e **altere o `jwt_secret`**:
 
 ```sql
 UPDATE app_config
@@ -108,18 +100,12 @@ WHERE chave = 'jwt_secret';
 > Funciona no plano gratuito do n8n - o segredo fica no Postgres, não em Variables nem no servidor.
 > Os nodes JWT usam **HMAC-SHA256 em JavaScript puro** (sem `require('crypto')` nem `crypto.subtle`) - compatível com instâncias hospedadas restritas.
 
-5. Em **cada** node Postgres (incluindo `Buscar_jwt_secret`), vincule a credencial do banco (Session Pooler recomendado no Supabase).
-6. Nos nodes Postgres de **busca** (`Buscar_cliente`, `Buscar_ticket`, `Verificar_cliente`, `Listar_tickets`, `Buscar_interacoes`): ative **Always Output Data** nas configurações do node.
+5. Em **cada** node Postgres (incluindo `Buscar_jwt_secret`), vincule a credencial do PostgreSQL da aplicacao.
+6. Nos nodes Postgres de **busca** (`Buscar_cliente`, `Buscar_ticket`, `Verificar_cliente`, `Listar_tickets`, `Buscar_interacoes`): ative **Always Output Data** nas configuracoes do node.
 
-### Credencial Postgres (Supabase)
+### Credencial Postgres (n8n)
 
-| Campo | Valor típico |
-|-------|--------------|
-| Host | `aws-0-<regiao>.pooler.supabase.com` |
-| Port | `5432` |
-| Database | `postgres` |
-| User | `postgres.<project-ref>` |
-| SSL | Allow |
+Use host, porta, database, usuario e senha do `DATABASE_URL`. Ative SSL se o provedor exigir.
 
 ## 6. Testar a API
 
@@ -170,7 +156,7 @@ Para usar `/webhook/` (sem `-test`), o workflow precisa estar **publicado/ativo*
 |---------|----------------|---------|
 | `webhook not registered` | Listen inativo ou expirado | Listen for test event antes do request |
 | Fluxo para no Postgres, sem 404 | 0 linhas sem Always Output Data | Ativar Always Output Data no node |
-| `ENETUNREACH` IPv6 | Conexão direta Supabase | Usar Session Pooler |
+| `ENETUNREACH` IPv6 | Host inacessivel na rede | Usar pooler/IPv4 do provedor |
 | 500 No Respond to Webhook | Ramo IF sem node Respond | Conectar todos os ramos a `Responde_*` |
 | Postman 400 `CLIENTE_ID_INVALIDO` | `cliente_id` vazio no environment | Criar cliente e salvar o `id` retornado |
 
@@ -217,8 +203,8 @@ Documentação detalhada: [`frontend/README.md`](../frontend/README.md)
 
 ## 10. Etapa 4 - Autenticação JWT
 
-1. Aplique `002_agentes.sql` no Supabase.
-2. Rode `003_app_config.sql`, atualize `jwt_secret` no Supabase e reimporte todos os workflows (incluindo `POST_Auth_Login.json`).
+1. Aplique `002_agentes.sql` no PostgreSQL.
+2. Rode `003_app_config.sql`, atualize `jwt_secret` no banco e reimporte todos os workflows (incluindo `POST_Auth_Login.json`).
 3. Ative/publicar workflows protegidos.
 4. Teste no Postman: login → GET clientes com Bearer → GET clientes sem Bearer (401).
 5. No frontend, login real com sessão (`localStorage` se "Lembrar-me", senão `sessionStorage`).

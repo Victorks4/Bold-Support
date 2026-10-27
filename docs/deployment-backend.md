@@ -1,6 +1,6 @@
 ﻿# Deploy do backend (n8n) no Railway
 
-Guia para hospedar o backend Bold Support em uma instancia n8n propria no Railway, **sem alterar o Supabase** (banco da aplicacao continua la).
+Guia para hospedar o backend Bold Support em uma instancia n8n propria no Railway. O banco PostgreSQL da aplicacao (clientes, tickets, etc.) permanece externo ao Railway.
 
 ## Arquitetura
 
@@ -8,7 +8,7 @@ Guia para hospedar o backend Bold Support em uma instancia n8n propria no Railwa
 Browser / Postman
        |
        v
-  Railway (n8n)  ----webhooks---->  Supabase Postgres
+  Railway (n8n)  ----webhooks---->  PostgreSQL (app)
        |                              (clientes, tickets,
        |                               agentes, app_config)
        v
@@ -18,16 +18,16 @@ Browser / Postman
 | Banco | Finalidade |
 |-------|------------|
 | **Postgres Railway** | Metadados do n8n (workflows, credenciais, execucoes) |
-| **Supabase** | Dados da aplicacao (clientes, tickets, interacoes, agentes, app_config) |
+| **PostgreSQL (app)** | Dados da aplicacao (clientes, tickets, interacoes, agentes, app_config) |
 
-> O Supabase **nao muda**. So apontamos os nodes Postgres dos workflows para a mesma credencial que voce ja usa hoje.
+> O banco da app nao roda no Railway. Os nodes Postgres dos workflows usam a credencial do PostgreSQL onde as migrations foram aplicadas.
 
 ---
 
 ## Pre-requisitos
 
 - Conta no [Railway](https://railway.app)
-- Supabase com migrations `001`, `002` e `003` aplicadas
+- PostgreSQL com migrations `001`, `002` e `003` aplicadas
 - Repositorio `Bold-Support` no GitHub (branch `main`)
 - Postman ou `npm run test:api` para validar
 
@@ -59,7 +59,7 @@ Acesse http://localhost:5678, crie a conta owner e importe **um** workflow para 
 No projeto Railway:
 
 1. **+ New** -> **Database** -> **PostgreSQL**
-2. Esse banco e **so para o n8n** (nao e o Supabase da app)
+2. Esse banco e **so para o n8n** (nao e o PostgreSQL da app)
 
 ---
 
@@ -121,26 +121,17 @@ https://SEU-SERVICO.up.railway.app/webhook
 
 ---
 
-## Passo 7 - Configurar Supabase no n8n
+## Passo 7 - Configurar PostgreSQL da app no n8n
 
 ### Credencial Postgres
 
 1. **Credentials** -> **Postgres** -> **Create**
-2. Nome sugerido: `Bold Support - Supabase`
-3. Use o **Session Pooler** do Supabase:
-
-| Campo | Valor |
-|-------|-------|
-| Host | `aws-0-<regiao>.pooler.supabase.com` |
-| Port | `5432` |
-| Database | `postgres` |
-| User | `postgres.<project-ref>` |
-| Password | senha do projeto |
-| SSL | Allow |
+2. Nome sugerido: `Bold Support - Postgres`
+3. Preencha host, porta, database, usuario e senha do PostgreSQL onde as migrations foram aplicadas (SSL conforme o provedor).
 
 ### JWT secret (se ainda nao fez)
 
-No Supabase SQL Editor:
+No cliente SQL ou painel do banco:
 
 ```sql
 UPDATE app_config
@@ -173,7 +164,7 @@ Importe **todos** os 11 JSONs de `n8n/workflows/`:
 
 Em **cada** workflow:
 
-1. Abra **todos** os nodes **Postgres** (incluindo `Buscar_jwt_secret`) -> selecione a credencial Supabase
+1. Abra **todos** os nodes **Postgres** (incluindo `Buscar_jwt_secret`) -> selecione a credencial do PostgreSQL da app
 2. Nos nodes de **busca** (`Buscar_cliente`, `Buscar_ticket`, etc.): **Always Output Data = ON**
 3. **Ative** o workflow (toggle Active)
 4. Copie a **Production URL** de cada webhook
@@ -238,10 +229,10 @@ npm run test:api
 |----------|----------------|---------|
 | 502 / healthcheck falha | `N8N_PORT` errado | Use `${{PORT}}` |
 | Webhook 404 | Workflow inativo | Ative o workflow no n8n |
-| 401 TOKEN_INVALIDO | `jwt_secret` diferente | Confira `app_config` no Supabase |
+| 401 TOKEN_INVALIDO | `jwt_secret` diferente | Confira `app_config` no PostgreSQL |
 | CORS no browser | `N8N_CORS_ORIGIN` ausente | Adicione dominio Firebase |
 | CORS `PATCH`/`DELETE` bloqueado (Firebase) | Bug n8n &lt; 1.109 em paths com `:id` | Atualize imagem para `n8nio/n8n:1.109.0+` e redeploy |
-| Postgres node falha | Credencial errada | Session Pooler + SSL Allow |
+| Postgres node falha | Credencial errada | Host, SSL e senha corretos |
 | URL webhook errada | `WEBHOOK_URL` desatualizada | Atualize e redeploy |
 
 ---

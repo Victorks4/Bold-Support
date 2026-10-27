@@ -12,7 +12,7 @@ Browser (Firebase Hosting)
   Railway (n8n)
        |
        v
-  Supabase Postgres
+  PostgreSQL (banco da app)
 ```
 
 O Firebase serve apenas arquivos estáticos (`frontend/dist`). Toda a API passa pelo n8n no Railway.

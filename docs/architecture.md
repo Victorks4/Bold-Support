@@ -2,7 +2,7 @@
 
 ## Visão geral
 
-Bold Support é um sistema de chamados (tickets) com backend implementado em **n8n**, persistência em **PostgreSQL** (Supabase) e frontend **React** (console do agente). Cada rota HTTP do backend é um workflow n8n independente que orquestra validação, consulta ao banco e resposta JSON.
+Bold Support é um sistema de chamados (tickets) com backend implementado em **n8n**, persistência em **PostgreSQL** e frontend **React** (console do agente). Cada rota HTTP do backend é um workflow n8n independente que orquestra validação, consulta ao banco e resposta JSON.
 
 ```mermaid
 flowchart LR
@@ -10,7 +10,7 @@ flowchart LR
   Ctx[AppDataContext]
   Client[Postman / integrações]
   N8N[n8n Webhooks]
-  PG[(PostgreSQL / Supabase)]
+  PG[(PostgreSQL)]
 
   Browser --> Ctx
   Ctx -->|HTTP /webhook| N8N
@@ -182,7 +182,7 @@ Bold-Support/
 | Serviço | Uso |
 |---------|-----|
 | n8n (Bold Solution) | Execução dos workflows e webhooks |
-| Supabase / PostgreSQL | Persistência de clientes, tickets e interações |
+| PostgreSQL | Persistência de clientes, tickets e interações |
 
 Produção na instância Bold: `/webhook/{path}` ou `/webhook/{webhookId}/{path}` conforme o workflow (ver `docs/api.md`). Teste: `/webhook-test/{path}` com Listen ativo.
 

@@ -175,7 +175,7 @@
                 "{{cliente_id}}"
               ]
             },
-            "description": "Workflow: GET Cliente por ID\nUse cliente_id do POST ou do Supabase."
+            "description": "Workflow: GET Cliente por ID\nUse cliente_id do POST ou do banco."
           },
           "response": []
         },
@@ -296,7 +296,7 @@
                 "criar"
               ]
             },
-            "description": "Workflow: POST Tickets\nCria ticket + interação sistema no Supabase."
+            "description": "Workflow: POST Tickets\nCria ticket + interacao sistema no PostgreSQL."
           },
           "response": []
         },

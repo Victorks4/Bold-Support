@@ -3,7 +3,7 @@
 ## Tecnologia
 
 - **SGBD:** PostgreSQL
-- **Provedor:** Supabase (compatível com qualquer instância PostgreSQL 14+)
+- **Provedor:** qualquer instância PostgreSQL 14+ (local ou hospedada)
 - **Migrations:**
   - [`database/migrations/001_initial_schema.sql`](../database/migrations/001_initial_schema.sql)
   - [`database/migrations/002_agentes.sql`](../database/migrations/002_agentes.sql)
@@ -67,7 +67,7 @@ erDiagram
 | `senha_hash` | TEXT | NOT NULL | Hash bcrypt via `crypt()` / `gen_salt('bf')` |
 | `criado_em` | TIMESTAMPTZ | NOT NULL, default `now()` | Data de cadastro |
 
-**Acesso:** somente via workflows n8n (credencial servidor). RLS desligado - o frontend não acessa o Supabase diretamente.
+**Acesso:** somente via workflows n8n (credencial servidor). O frontend nao acessa o banco diretamente.
 
 ### `app_config`
 
@@ -77,7 +77,7 @@ erDiagram
 | `valor` | TEXT | NOT NULL | Valor em texto |
 | `atualizado_em` | TIMESTAMPTZ | NOT NULL, default `now()` | Última alteração |
 
-Chaves usadas na Etapa 4: `jwt_secret`, `jwt_expires_in`. Altere `jwt_secret` no Supabase SQL Editor após rodar `003_app_config.sql`.
+Chaves usadas na Etapa 4: `jwt_secret`, `jwt_expires_in`. Altere `jwt_secret` no banco apos rodar `003_app_config.sql`.
 
 ### `clientes`
 
@@ -147,7 +147,7 @@ psql "$DATABASE_URL" -f database/migrations/002_agentes.sql
 psql "$DATABASE_URL" -f database/migrations/003_app_config.sql
 ```
 
-No Supabase: SQL Editor → colar o conteúdo de cada arquivo → Run (na ordem). Após `003`, altere `jwt_secret` em `app_config` antes de usar em produção.
+Alternativa: cliente SQL ou painel do provedor - cole o conteudo de cada migration na ordem. Apos `003`, altere `jwt_secret` em `app_config` antes de usar em producao.
 
 **Reset completo (cuidado - apaga dados):**
 
@@ -160,7 +160,7 @@ DROP TABLE IF EXISTS interacoes, tickets, clientes CASCADE;
 
 | Decisão | Escolha | Justificativa |
 |---------|---------|---------------|
-| IDs | UUID | Seguro em APIs públicas; padrão Supabase |
+| IDs | UUID | Seguro em APIs publicas; gerados no banco |
 | E-mail único | `UNIQUE` | Evita clientes duplicados |
 | Protocolo | `TKT-YYYYMMDD-XXXX` | Legível para o usuário; gerado no n8n |
 | DELETE cliente | `RESTRICT` | Protege tickets vinculados (Etapa 2 definirá remoção) |
